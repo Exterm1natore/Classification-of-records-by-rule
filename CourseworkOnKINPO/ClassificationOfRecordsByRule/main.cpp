@@ -7,6 +7,55 @@
 #include <QStringList>
 #include <QTextCodec>
 
+void distributesRecords(const QString& recordsData, QList<Records>* record)
+{
+    QStringList substringsRecords = recordsData.split(";");
+
+    for(int i = 0; i < substringsRecords.count(); i++)
+    {
+        Records *newRecord = new Records;
+
+        newRecord->setName(substringsRecords[i].mid(0, substringsRecords[i].indexOf(":")));
+
+        QRegExp rxPropertes("([^ ,:]+)\\s*=");
+        int pos = 0;
+
+        //----------------------------------------------------------------------------------------------------------------------
+        int start = substringsRecords[i].indexOf('['); // ищем первый символ "["
+        int end = substringsRecords[i].indexOf(']'); // ищем первый символ "]"
+        //----------------------------------------------------------------------------------------------------------------------
+
+        while((pos = rxPropertes.indexIn(substringsRecords[i], pos)) != -1)
+        {
+            newRecord->setPropertes(rxPropertes.cap(1));
+            newRecord->recordPropertes.append(newRecord->getPropertes());
+            pos += rxPropertes.matchedLength();
+
+            //-------------------------------------------------------------------------------------------------------------------
+                QString substring = substringsRecords[i].mid(start + 1, end - start - 1); // вырезаем подстроку между скобками
+                QStringList values = substring.split(",", QString::SkipEmptyParts); // разделяем подстроку по запятой
+                for (const QString& value : values)
+                {
+                    bool ok;
+                    int intValue = value.trimmed().toInt(&ok); // преобразуем строку в целое число
+                    if (ok)
+                    {
+                       newRecord->setIntegerValues(intValue); // выводим полученные значения
+                       newRecord->arrIntegerValues.append(newRecord->getIntegerValues());
+                    }
+                }
+                start = substringsRecords[i].indexOf('[', end); // ищем следующий символ "["
+                end = substringsRecords[i].indexOf(']', end + 1); // ищем следующий символ "]"
+            //----------------------------------------------------------------------------------------------------------------------
+
+           newRecord->recordIntegerValues.insert(newRecord->getPropertes(), newRecord->arrIntegerValues);
+           newRecord->arrIntegerValues.clear();
+        }
+        record->append(*newRecord);
+        delete newRecord;
+    }
+}
+
 void classificationRecordsByRule (const QList<Records>& records, const QList<ClassificationRules>& classificationRules, QList<Result>* result)
 {
 
@@ -87,7 +136,9 @@ int main(int argc, char *argv[])
         QList<ClassificationRules> rules;
         QList<Result> result;
 
-        Records *rec = new Records;
+        QString strRecords = "Шкаф: цвет=[1, 2], размер=[10,12,15];Стол: размер=[12, 15], цвет=[1, 15], покрытие=[12].";
+
+        /*Records *rec = new Records;
         rec->setName("stol");
 
         rec->recordPropertes.append("cvet");
@@ -160,10 +211,28 @@ int main(int argc, char *argv[])
 
         qDebug() << result[1].getClassName();
         for(int i = 0; i < result[1].resultRecordName.count(); i++)
-            qDebug() << result[1].resultRecordName[i];
+            qDebug() << result[1].resultRecordName[i];*/
 
 
         //-----------------------------------------------------------------------------------
+
+            distributesRecords(strRecords, &records);
+
+            QTextStream outStream(stdout);
+             outStream.setCodec(QTextCodec::codecForName("cp866"));
+
+             for(int i = 0; i < records.count(); i++)
+             {
+                outStream <<"Name: " << records[i].getName() << flush;
+                for(int j = 0; j < records[i].recordPropertes.count(); j++)
+                {
+                    outStream << "\n" << flush;
+                    outStream <<"Properties: " << records[i].recordPropertes[j] << flush << "\n" << "Value: ";
+                    for(int k = 0; k < records[i].recordIntegerValues[records[i].recordPropertes[j]].count(); k++)
+                        outStream << records[i].recordIntegerValues[records[i].recordPropertes[j]][k] << ", " << flush;
+                }
+                outStream << "\n\n" << flush;
+             }
 
     return a.exec();
 }
