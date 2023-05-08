@@ -7,6 +7,100 @@
 #include <QStringList>
 #include <QTextCodec>
 
+void distributesClassificationRules(const QString& rulesData, QList<ClassificationRules>* classificationRules)
+{
+    QStringList substringsRules = rulesData.split(";");
+
+    for(int i = 0; i < substringsRules.count(); i++)
+    {
+     ClassificationRules *newRule = new ClassificationRules;
+
+    QRegExp classRx("«([^»]+)»"); // находим слова внутри кавычек « »
+    QRegExp propertyRx("свойство «([^»]+)»"); // находим слова после слова "свойство «" и до закрывающей кавычки
+
+    int classPos = classRx.indexIn(substringsRules[i]);
+    if (classPos != -1)
+       newRule->setName(classRx.cap(1));
+
+    int propertyPos = propertyRx.indexIn(substringsRules[i]);
+    if (propertyPos != -1)
+        newRule->setConstraint(propertyRx.cap(1));
+
+
+    QString withLength = "которое представлено";
+    QString singleValue = "в составе которого есть значение";
+    QString severalValues = "и значение этого свойства равно";
+
+    if(substringsRules[i].contains(withLength))
+    {
+        newRule->condition = propertyWithLength;
+
+     if(substringsRules[i].contains("одним"))
+         newRule->value = Single;
+     else if(substringsRules[i].contains("двумя"))
+         newRule->value = Two;
+     else if(substringsRules[i].contains("тремя"))
+         newRule->value = Three;
+     else if(substringsRules[i].contains("четырьмя"))
+         newRule->value = Four;
+     else if(substringsRules[i].contains("пятью"))
+         newRule->value = Five;
+     else if(substringsRules[i].contains("шестью"))
+         newRule->value = Six;
+     else if(substringsRules[i].contains("семью"))
+         newRule->value = Seven;
+     else if(substringsRules[i].contains("восемью"))
+         newRule->value = Eight;
+     else if(substringsRules[i].contains("девятью"))
+         newRule->value = Nine;
+    }
+    else if(substringsRules[i].contains(singleValue))
+    {
+        newRule->condition = propertySingleValue;
+        newRule->value = NotQuantity;
+
+        QRegExp rxValue("(\\d+)");
+        int pos = 0;
+        while ((pos = rxValue.indexIn(substringsRules[i], pos)) != -1)
+        {
+            newRule->setIntegerValues(rxValue.cap(1).toInt());
+            pos += rxValue.matchedLength();
+        }
+
+        newRule->arrIntegerValues.append(newRule->getIntegerValues());
+    }
+    else if(substringsRules[i].contains(severalValues))
+    {
+        newRule->condition = propertyWithSeveralValues;
+        newRule->value = NotQuantity;
+
+        int start = substringsRules[i].indexOf('['); // ищем первый символ "["
+        int end = substringsRules[i].indexOf(']'); // ищем первый символ "]"
+
+        QString substring = substringsRules[i].mid(start + 1, end - start - 1); // вырезаем подстроку между скобками
+        QStringList values = substring.split(",", QString::SkipEmptyParts); // разделяем подстроку по запятой
+        for (const QString& value : values)
+        {
+            bool ok;
+            int intValue = value.trimmed().toInt(&ok); // преобразуем строку в целое число
+            if (ok)
+            {
+                newRule->setIntegerValues(intValue); // выводим полученные значения
+                newRule->arrIntegerValues.append(newRule->getIntegerValues());
+            }
+        }
+    }
+    else
+    {
+        newRule->condition = propertyWithNoValue;
+        newRule->value = NotQuantity;
+    }
+
+    classificationRules->append(*newRule);
+    delete newRule;
+    }
+}
+
 void distributesRecords(const QString& recordsData, QList<Records>* record)
 {
     QStringList substringsRecords = recordsData.split(";");
@@ -137,6 +231,10 @@ int main(int argc, char *argv[])
         QList<Result> result;
 
         QString strRecords = "Шкаф: цвет=[1, 2], размер=[10,12,15];Стол: размер=[12, 15], цвет=[1, 15], покрытие=[12].";
+        QString strRule = "Запись принадлежит классу «С покрытием», если у нее есть свойство «покрытие»;"
+                              "Запись принадлежит классу «Объёмный», если у нее есть свойство «размер», которое представлено тремя значениями;"
+                              "Запись принадлежит классу «Синий», если у нее есть свойство «цвет», в составе которого есть значение «1»;"
+                              "Запись принадлежит классу «Матовый», если у нее есть свойство «покрытие» и значение этого свойства равно «[44, 21]».";
 
         /*Records *rec = new Records;
         rec->setName("stol");
@@ -216,7 +314,7 @@ int main(int argc, char *argv[])
 
         //-----------------------------------------------------------------------------------
 
-            distributesRecords(strRecords, &records);
+            /*distributesRecords(strRecords, &records);
 
             QTextStream outStream(stdout);
              outStream.setCodec(QTextCodec::codecForName("cp866"));
@@ -232,6 +330,41 @@ int main(int argc, char *argv[])
                         outStream << records[i].recordIntegerValues[records[i].recordPropertes[j]][k] << ", " << flush;
                 }
                 outStream << "\n\n" << flush;
+             }*/
+
+        //-----------------------------------------------------------------------------------
+
+            distributesClassificationRules(strRule, &rules);
+
+            QTextStream outStream(stdout);
+             outStream.setCodec(QTextCodec::codecForName("cp866"));
+
+             for(int i = 0; i < rules.count(); i++)
+             {
+                 outStream << "Class: " << rules[i].getName() << flush << "\n";
+                 outStream << "Constraint: " << rules[i].getConstraint() << flush << "\n";
+
+                 switch (rules[i].condition)
+                 {
+                 case propertyWithLength:
+                     outStream << "Value: " << rules[i].value << flush << "\n";
+                     break;
+
+                 case propertySingleValue:
+                     outStream << "Value: " << rules[i].arrIntegerValues.first() << flush << "\n";
+                     break;
+
+                 case propertyWithSeveralValues:
+                     outStream << "Value: " << flush;
+                     for(int j = 0; j < rules[i].arrIntegerValues.count(); j++)
+                        outStream << rules[i].arrIntegerValues[j] << ", " << flush;
+                     break;
+
+                 default:
+                     outStream << "ERROR" << flush << "\n";
+                     break;
+                 }
+                 outStream << "\n\n" << flush;
              }
 
     return a.exec();
