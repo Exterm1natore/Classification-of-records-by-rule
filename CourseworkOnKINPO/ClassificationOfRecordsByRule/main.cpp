@@ -226,15 +226,31 @@ int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
 
+    QTextStream outStream(stdout);
+         outStream.setCodec(QTextCodec::codecForName("cp866"));
+
         QList<Records> records;
         QList<ClassificationRules> rules;
         QList<Result> result;
 
         QString strRecords = "Шкаф: цвет=[1, 2], размер=[10,12,15];Стол: размер=[12, 15], цвет=[1, 15], покрытие=[12].";
+
         QString strRule = "Запись принадлежит классу «С покрытием», если у нее есть свойство «покрытие»;"
-                              "Запись принадлежит классу «Объёмный», если у нее есть свойство «размер», которое представлено тремя значениями;"
-                              "Запись принадлежит классу «Синий», если у нее есть свойство «цвет», в составе которого есть значение «1»;"
-                              "Запись принадлежит классу «Матовый», если у нее есть свойство «покрытие» и значение этого свойства равно «[44, 21]».";
+                          "Запись принадлежит классу «Объёмный», если у нее есть свойство «размер», которое представлено тремя значениями;"
+                          "Запись принадлежит классу «Синий», если у нее есть свойство «цвет», в составе которого есть значение «1»;"
+                          "Запись принадлежит классу «Матовый», если у нее есть свойство «покрытие» и значение этого свойства равно «[44, 21]».";
+
+        distributesRecords(strRecords, &records);
+        distributesClassificationRules(strRule, &rules);
+        classificationRecordsByRule(records, rules, &result);
+
+        for(int i = 0; i < result.count(); i++)
+        {
+            outStream << result[i].getClassName() << ": " << flush;
+            for(int j = 0; j < result[i].resultRecordName.count(); j++)
+                outStream << result[i].resultRecordName[j] << ", " << flush;
+            outStream << "\n\n" << flush;
+        }
 
         /*Records *rec = new Records;
         rec->setName("stol");
@@ -334,7 +350,7 @@ int main(int argc, char *argv[])
 
         //-----------------------------------------------------------------------------------
 
-            distributesClassificationRules(strRule, &rules);
+            /*distributesClassificationRules(strRule, &rules);
 
             QTextStream outStream(stdout);
              outStream.setCodec(QTextCodec::codecForName("cp866"));
@@ -365,7 +381,7 @@ int main(int argc, char *argv[])
                      break;
                  }
                  outStream << "\n\n" << flush;
-             }
+             }*/
 
     return a.exec();
 }
