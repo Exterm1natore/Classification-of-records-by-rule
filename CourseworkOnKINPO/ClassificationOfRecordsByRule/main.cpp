@@ -8,10 +8,272 @@
 #include <QTextCodec>
 #include <QRegularExpression>
 
-QString unzipRecords (const QString& recordsFilename)
+bool checkClassificationRule(const QString& strRule)
+{
+    QString rule = "Запись принадлежит классу \"С покрытием\", если у нее есть свойство \"покрытие\";"
+                   "Запись принадлежит классу \"Объёмный\", если у нее есть свойство \"размер\", которое представлено двумя значениями;"
+                   "Запись принадлежит классу \"Синий\", если у нее есть свойство \"цвет\", в составе которого есть значение \"1\";"
+                   "Запись принадлежит классу \"Матовый\", если у нее есть свойство \"покрытие\" и значение этого свойства равно \"[44, 21]\".";
+
+    // Паттерн для проверки первого типа строки
+    QString pattern1 = "Запись принадлежит классу \"(.+)\", если у нее есть свойство \"(.+)\"";
+    // Паттерн для проверки второго типа строки
+    QString pattern2 = "Запись принадлежит классу \"(.+)\", если у нее есть свойство \"(.+)\", которое представлено ([одним|двумя|тремя|четырьмя|пятью|шестью|семью|восемью|девятью]+) значени";
+    // Паттерн для проверки четвертого типа строки
+    QString pattern3 = "Запись принадлежит классу \"(.+)\", если у нее есть свойство \"(.+)\", в составе которого есть значение \"(.+)\"";
+    // Паттерн для проверки третьего типа строки
+    QString pattern4 = "Запись принадлежит классу \"(.+)\", если у нее есть свойство \"(.+)\" и значение этого свойства равно \"\\[(.+)\\]\"";
+
+
+    QRegularExpression regex1(pattern4);
+    QRegularExpression regex2(pattern3);
+    QRegularExpression regex3(pattern2);
+    QRegularExpression regex4(pattern1);
+
+    if (!rule.endsWith("."))
+        return false; //Если заканчивается не на точку
+    if (rule.count(".") > 1)
+        return false; //Если больше одной точки
+
+    QStringList strOneRule = rule.split(";", QString::SkipEmptyParts);
+
+    for(int i = 0; i < strOneRule.count(); i++)
+    {
+        if(strOneRule[i][strOneRule[i].count() - 1] != "\"" && strOneRule[i][strOneRule[i].count() - 1] != "."
+                && strOneRule[i][strOneRule[i].count() - 1] != "и" && strOneRule[i][strOneRule[i].count() - 1] != "м")
+            return false;  //Если последний символ не " не 'и' не .
+
+        if(strOneRule[i][0].isSpace())
+            return false; //Первый символ не может быть пробелом
+
+        for(int j = 0; j < strOneRule[i].count() - 1; j++)
+            if(strOneRule[i][j].isSpace() && strOneRule[i][j + 1].isSpace())
+                return false; //Нельзя больше одного пробела
+
+        if(strOneRule[i].count("\"") != 4 && strOneRule[i].count("\"") != 6)
+            return false; // символов "" должно быть либо 4 либо 6
+
+        //---------------Провека правильности названия класса и ограничения-------------------------------------
+        if(regex1.match(strOneRule[i]).hasMatch() || regex2.match(strOneRule[i]).hasMatch()
+                || regex3.match(strOneRule[i]).hasMatch() || regex4.match(strOneRule[i]).hasMatch())
+        {
+            QStringList substrings;
+
+            int startPos = strOneRule[i].indexOf("\"");
+            while (startPos != -1)
+            {
+                int endPos = strOneRule[i].indexOf("\"", startPos + 1);
+                if (endPos != -1)
+                {
+                    QString substring = strOneRule[i].mid(startPos + 1, endPos - startPos - 1);
+                    substrings.append(substring);
+                    startPos = strOneRule[i].indexOf("\"", endPos + 1);
+                }
+                else
+                    break;
+            }
+
+            for(int j = 0; j < 2; j++)
+            if(!substrings[j][0].isLetter() || !substrings[j][substrings[j].count() - 1].isLetter())
+                return false; //нелья после " и перед " савить что-то кроме буквы
+
+            if(substrings[0].count() < 3 || substrings[0].count() > 20)
+                return false; //Название класса не может быть меньше 3 или больше 20
+
+            if(substrings[1].count() < 3 || substrings[1].count() > 20)
+                return false; // Ограничение не может быть меньше 3 или больше 20
+
+            if(!substrings[0][0].isUpper())
+                return false; //Название класса начинается с заглавной буквы
+
+            for(int j = 1; j < substrings[0].count(); j++)
+                if(!substrings[0][j].isSpace() && substrings[0][j].isUpper())
+                    return false; //Все кроме заглавной буквы на названии класса должны быть в нижнем регистре
+
+            for(int j = 0; j < substrings[0].count(); j++)
+                if(!substrings[0][j].isLetter() && !substrings[0][j].isSpace())
+                    return false; //Название класса может содержать только буквы и пробел
+
+            for(int j = 0; j < substrings[1].count(); j++)
+                if(!substrings[1][j].isLetter() || substrings[1][j].isSpace())
+                    return false; //Ограничение может содержать только буквы без пробелов
+
+            for(int j = 0; j < substrings[1].count(); j++)
+                if(!substrings[1].isLower())
+                    return false; //Ограничение может быть только в нижнем регистре
+
+            //------------------------------------------------------------------------------------------------------
+
+            if (regex1.match(strOneRule[i]).hasMatch())
+            {
+
+             if(strOneRule[i].count("[") != 1 && strOneRule[i].count("]") != 1)
+                 return false; //[ ] должно быть по одному
+
+             if(strOneRule[i].indexOf("]") + 2 != strOneRule[i].count() && strOneRule[i].count(".") == 0)
+                 return false; //Неверный формат воода, после []" строка должна заканчиваться
+
+             if(strOneRule[i].count(".") == 1 && strOneRule[i][strOneRule[i].indexOf("]") + 2] != ".")
+
+                 return false; //Неверный формат воода, после []" строка должна заканчиваться
+             //----------------------------------Проверка на то что в [] могут быть только определённые символы и определённое число пробелолв
+             //----------------------------------и запятых и не может быть побел и запятая подряд--------------------------------------------
+             int checkStart = strOneRule[i].indexOf('['); // ищем первый символ "["
+             int checkEnd = strOneRule[i].indexOf(']'); // ищем первый символ "]"
+             int position;
+
+             position = checkStart + 1;
+
+             if(checkEnd - checkStart == 1)
+                 return false; //поле [..] не может быть пустым
+             //Ситоит в следующих 2 if убрать условие strOneRecord[i][checkStart + 1].isSpace() т.к.
+
+             if(strOneRule[i][checkStart + 1].isSpace() || !strOneRule[i][checkStart+ 1].isNumber())
+                 return false; //если после [ идёт пробел или любой символ кроме числа
+
+             if(strOneRule[i][checkEnd - 1].isSpace() || !strOneRule[i][checkEnd - 1].isNumber())
+                 return false; //если перед ] идёт пробел или любой символ кроме числа
+
+             while(strOneRule[i][position] != "]")
+             {
+                 if(!strOneRule[i][position].isNumber() && !strOneRule[i][position].isSpace() && strOneRule[i][position] != ",")
+                     return false; //Не допускается использование между символами '[' и ']' всего, кроме 'пробела', ',' или цифр"
+
+
+                 if(strOneRule[i][position].isSpace() && strOneRule[i][position + 1].isSpace())
+                     return false; //"Ошибка! Не допускается между символами '[' и ']' использование больше одного 'пробела'"
+
+
+                 if(strOneRule[i][position] == "," && strOneRule[i][position + 1] == ",")
+                     return false; //"Ошибка! Не допускается между символами '[' и ']' использование больше одной запятой (',')"
+
+
+                 if(strOneRule[i][position].isSpace() && strOneRule[i][position + 1] == ",")
+                     return false; //"Ошибка! Не допускается между символами '[' и ']' использование после 'пробела' запятой (',')"
+
+
+                 if(strOneRule[i][position + 1] != "]" && strOneRule[i][position].isNumber()
+                         && !strOneRule[i][position + 1].isNumber() && strOneRule[i][position + 1] != ",")
+                     return false; //"Ошибка! Между символами '[' и ']' после цифры должна стоять запятая (',')"
+
+                 position ++;
+             }
+             //---------------------------------------------------------------------------------------------------------------------------------
+
+             //------------------------------------------------------------------------------------------------------------------------------
+             //-----------------------------------Проверка что в [ ] должны быть только цифры от 1 до 99
+             int start = strOneRule[i].indexOf('['); // ищем первый символ "["
+             int end = strOneRule[i].indexOf(']'); // ищем первый символ "]"
+
+                 QString substring = strOneRule[i].mid(start + 1, end - start - 1); // вырезаем подстроку между скобками
+                 QStringList values = substring.split(",", QString::SkipEmptyParts); // разделяем подстроку по запятой
+
+                 //--------------
+
+                 for (const QString& value : values)
+                 {
+                     bool ok;
+                     int intValue = value.trimmed().toInt(&ok); // преобразуем строку в целое число
+                     if (ok)
+                         if(intValue < 1 || intValue > 99)
+                             return false; //"Ошибка! Между символами '[' и ']' цифры должны лежать в диапазоне [1;99]"
+
+                 }
+             //-----------------------------------------------------------------------------------------------------------------------------------------
+            }
+            else if (regex2.match(strOneRule[i]).hasMatch())
+            {
+                if(strOneRule[i].lastIndexOf("\"") + 1 != strOneRule[i].count() && strOneRule[i].count(".") == 0)
+                    return false; //Ошибка в написании (Больше чем шаблон)
+
+                if(strOneRule[i].count(".") == 1 && strOneRule[i][strOneRule[i].lastIndexOf("\"") + 1] != ".")
+                    return false; //Ошибка в написании (Больше чем шаблон)
+
+                for(int j = 0; j < substrings[2].count(); j++)
+                    if(!substrings[2][j].isNumber())
+                        return false; //Можно использовать только цифры
+
+                if(substrings[2].toInt() < 1 || substrings[2].toInt() > 99)
+                    return false; //Нельзя чтобы число было меньше 1 и больше 99
+
+            }
+            else if (regex3.match(strOneRule[i]).hasMatch())
+            {
+                if(strOneRule[i].count("\"") != 4)
+                    return false; //символов " должно быть 4
+
+                if(strOneRule[i].lastIndexOf("и") + 1 != strOneRule[i].count() && strOneRule[i].lastIndexOf("м") + 1 != strOneRule[i].count()
+                        && strOneRule[i].count(".") == 0)
+                    return false; //Не соответствует шаблону
+
+                if(strOneRule[i].count(".") == 1 && (strOneRule[i][strOneRule[i].lastIndexOf("и") + 1] != "."
+                                                     || strOneRule[i][strOneRule[i].lastIndexOf("м") + 1] != "."))
+                    return false; //Не соответсвует шаблону
+
+                if (!strOneRule[i].contains("значением") && !strOneRule[i].contains("значениями"))
+                    return false; //Нет слов значением или значениями
+
+                //---------------------------ПОД ВОПРОСОМ НУЖНО ЛИ ЕСЛИ УЖЕ ЕСТЬ ШАБЛОН--------------------------------------
+                QString value_1 = "одним";
+                QString value_2 = "двумя";
+                QString value_3 = "тремя";
+                QString value_4 = "четырьмя";
+                QString value_5 = "пятью";
+                QString value_6 = "шестью";
+                QString value_7 = "семью";
+                QString value_8 = "восемью";
+                QString value_9 = "девятью";
+
+                if(!strOneRule[i].contains(value_1) && !strOneRule[i].contains(value_2) && !strOneRule[i].contains(value_3) &&
+                        !strOneRule[i].contains(value_4) && !strOneRule[i].contains(value_5) && !strOneRule[i].contains(value_6) &&
+                        !strOneRule[i].contains(value_7) && !strOneRule[i].contains(value_8) && !strOneRule[i].contains(value_9))
+                return false; //Нет ни одного из доступных значений
+
+                if(strOneRule[i].contains(value_1) && !strOneRule[i].contains("значением"))
+                    return false; //одним должно быть в единственном числе
+
+                if(!strOneRule[i].contains(value_1) && !strOneRule[i].contains("значениями"))
+                    return false; //Должно быть во множественном числе
+
+                if(strOneRule[i].count(value_1) > 1 || strOneRule[i].count(value_2) > 1 || strOneRule[i].count(value_3) > 1 ||
+                        strOneRule[i].count(value_4) > 1 || strOneRule[i].count(value_5) > 1 || strOneRule[i].count(value_6) > 1 ||
+                        strOneRule[i].count(value_7) > 1 || strOneRule[i].count(value_8) > 1 || strOneRule[i].count(value_9) > 1)
+                    return false; //не может встречаться больше 1 из предложенных значений
+
+                if(strOneRule[i].count("значением") > 1 || strOneRule[i].count("значениями") > 1)
+                    return false; //НЕ может быть больше одного
+
+                QStringList strLastValue = strOneRule[i].split(" ");
+
+                if(strLastValue[strLastValue.count() - 1] != "значением" && strLastValue[strLastValue.count() - 1] != "значениями"
+                        && strLastValue[strLastValue.count() - 1] != "значением." && strLastValue[strLastValue.count() - 1] != "значениями.")
+                    return false; //НЕ заканчивается на значением
+
+            }
+            else if (regex4.match(strOneRule[i]).hasMatch())
+            {
+                if(strOneRule[i].count("\"") != 4)
+                    return false; //символов " должно быть 4
+
+                if(strOneRule[i].lastIndexOf("\"") + 1 != strOneRule[i].count() && strOneRule[i].count(".") == 0)
+                    return false; //Ошибка в написании (Больше чем шаблон)
+
+                if(strOneRule[i].count(".") == 1 && strOneRule[i][strOneRule[i].lastIndexOf("\"") + 1] != ".")
+                    return false; //Ошибка в написании (Больше чем шаблон)
+            }
+        }
+        else
+            return false; // Не подошло ни по одному из шаблонов true только если проходит все проверки одного из шаблонов
+    }
+
+    return true;
+
+}
+
+QString checkRecords (const QString& strRecords)
 {
 
-    QString strRecords = "Шкаф: цвет=[1,2], размер=[10,12,15];Стол:размер=[12, 15],цвет=[1,2,3],покрытие=[12].";
+    //QString strRecords = "Шкаф: цвет=[1,2], размер=[10,12,15];Стол:размер=[12, 15],цвет=[1,2,3],покрытие=[12].";
 
     // Проверка окончания строки на точку
     if (!strRecords.endsWith("."))
@@ -20,8 +282,8 @@ QString unzipRecords (const QString& recordsFilename)
     if (strRecords.count(".") > 1)
         return "Ошибка! Точка ('.') может стоять только после последней записи";
 
-     if (strRecords.count() < 10)
-         return "Ошибка! Количество записей не может быть меньше 1. Допустимый диапазон: [1;100]";
+    if (strRecords.count() < 10)
+        return "Ошибка! Количество записей не может быть меньше 1. Допустимый диапазон: [1;100]";
 
     //Проверка на равенство ":" и ;"
     if(strRecords.count(":") != (strRecords.count(";") + 1))
@@ -31,7 +293,7 @@ QString unzipRecords (const QString& recordsFilename)
     QStringList strOneRecord = strRecords.split(";", QString::SkipEmptyParts);
 
     if(strOneRecord.count() > 100)
-       return "Ошибка! Количество записей не может быть больше 100. Допустимый диапазон: [1;100]";
+        return "Ошибка! Количество записей не может быть больше 100. Допустимый диапазон: [1;100]";
 
     //Проверка на необходимые символы ":", "=", "[", "]"
     //":" - один и < "=" и []
@@ -45,31 +307,31 @@ QString unzipRecords (const QString& recordsFilename)
 
         if(strOneRecord[i].count("[") != strOneRecord[i].count("]"))
             return "Ошибка! У свойства записи целочисленные значения записываются между '[' и ']' (количество '[' и ']' дожно совпадать)"
-                    "\nОшибка в записи: " + strOneRecord[i]; //количество скобор не равно
+                   "\nОшибка в записи: " + strOneRecord[i]; //количество скобор не равно
 
         if (strOneRecord[i].count("=") != strOneRecord[i].count("["))
             return "Ошибка! У записи каждому названию свойства соответствуют целочисленные значения которые соотносятся символом '=' "
                    "(количество символов '=' и '[', ']' должно совпадать)"
-                    "\nОшибка в записи: " + strOneRecord[i]; //количество = не равно [
+                   "\nОшибка в записи: " + strOneRecord[i]; //количество = не равно [
 
         //-----------------------------ПРОверка длинны и название записи--------------------------------------------------
-         int lineLength = 0; //длина какой либо строки
+        int lineLength = 0; //длина какой либо строки
         if(strOneRecord[i].lastIndexOf(":") > strOneRecord[i].indexOf("=") || strOneRecord[i].lastIndexOf(":") > strOneRecord[i].indexOf("[")
                 || strOneRecord[i].lastIndexOf(":") > strOneRecord[i].indexOf("]"))
             return "Ошибка! Запись должна начинаться с названия"
-                    "\nОшибка в записи: " + strOneRecord[i]; //ошибка ввода названия записи
+                   "\nОшибка в записи: " + strOneRecord[i]; //ошибка ввода названия записи
 
         for(int j = 0; strOneRecord[i][j] != ":"; j++)
         {
             if(!strOneRecord[i][j].isLetter())
                 return "Ошибка! В названии записи допускаются лишь буквы русского или английсского алфавита"
-                        "\nВы ввели: \"" + strOneRecord[i].mid(0, strOneRecord[i].indexOf(":"))
+                       "\nВы ввели: \"" + strOneRecord[i].mid(0, strOneRecord[i].indexOf(":"))
                         + "\"\nОшибка в записи: " + strOneRecord[i]; //ошибка в названии записи
             lineLength++;
         }
         if (lineLength < 3 || lineLength > 20)
             return "Ошибка! Название записи не может быть меньше трёх или больше двадцати символов"
-                    "\nОшибка в записи: " + strOneRecord[i]; //Дляна названия записи
+                   "\nОшибка в записи: " + strOneRecord[i]; //Дляна названия записи
 
         lineLength = 0;
 
@@ -91,7 +353,7 @@ QString unzipRecords (const QString& recordsFilename)
                     //isValid = false;
                     //break;
                     return "Ошибка! После каждого символа ']' должна стоять запятая (',')"
-                            "\nОшибка в записи: " + strOneRecord[i];
+                           "\nОшибка в записи: " + strOneRecord[i];
                 }
             }
 
@@ -99,18 +361,18 @@ QString unzipRecords (const QString& recordsFilename)
             if (lastIndex + 1 < strOneRecord[i].length() && strOneRecord[i][lastIndex + 1] == ',')
                 //isValid = false;
                 return "Ошибка! После последнего символа ']' может стоять только точка с запятой (';') или точка ('.')"
-                        "\nОшибка в записи: " + strOneRecord[i];
+                       "\nОшибка в записи: " + strOneRecord[i];
         }
         else
 
             // Если найден символ "," после последнего символа "]", устанавливаем isValid в false
             //isValid = false;
             return "Ошибка! После последнего символа ']' может стоять только точка с запятой (';') или точка ('.')"
-                    "\nОшибка в записи: " + strOneRecord[i];
+                   "\nОшибка в записи: " + strOneRecord[i];
 
         if (!isValid)
             return "Ошибка! После каждого символа ']' должна стоять запятая (','), кроме последнего символа ']'"
-                    "\nОшибка в записи: " + strOneRecord[i];
+                   "\nОшибка в записи: " + strOneRecord[i];
 
 
         //-----------------------------------------------
@@ -122,18 +384,18 @@ QString unzipRecords (const QString& recordsFilename)
         {
             if(strOneRecord[i][j] == "=" && strOneRecord[i][j + 1] != "[")
                 return "Ошибка! После символа '=' должен стоять символ '['"
-                        "\nОшибка в записи: " + strOneRecord[i];
+                       "\nОшибка в записи: " + strOneRecord[i];
 
             else if(strOneRecord[i][j] == "[" && strOneRecord[i][j - 1] != "=" && j > 0)
                 return "Ошибка! Перед символом '[' должен стоять символ '='"
-                        "\nОшибка в записи: " + strOneRecord[i];
+                       "\nОшибка в записи: " + strOneRecord[i];
 
             //else if(strOneRecord[i][j] == "]" && equalSymbal == strOneRecord[i].count("="))
-                //return "Ошибка! Перед символом";
+            //return "Ошибка! Перед символом";
 
             else if((j + 1) >= strOneRecord[i].count() && equalSymbal != 0)
                 return "Ошибка! Символ '=' должен быть перед символом '['"
-                        "\nОшибка в записи: " + strOneRecord[i];
+                       "\nОшибка в записи: " + strOneRecord[i];
 
             else if(strOneRecord[i][j] == "=")
                 equalSymbal--;
@@ -141,12 +403,12 @@ QString unzipRecords (const QString& recordsFilename)
             //Проверка на то что перед = нет пробела или раазделителя
             if(strOneRecord[i][0] == "=")
                 return "Ошибка! Строка должна начинаться с названия записи и не может начинаться с '='"
-                        "\nОшибка в записи: " + strOneRecord[i];
+                       "\nОшибка в записи: " + strOneRecord[i];
 
             else if(strOneRecord[i][j] == "=" && (strOneRecord[i][j-1].isSpace() || !strOneRecord[i][j-1].isLetter()))
                 return "Ошибка! Перед символом '=' должно идти название записи "
                        "(другие символы межу названием записи и символом '=' недопускаются)"
-                        "\nОшибка в записи: " + strOneRecord[i];
+                       "\nОшибка в записи: " + strOneRecord[i];
         }
         //--------------------------------------------------------------------------------------------------------------------
 
@@ -173,7 +435,7 @@ QString unzipRecords (const QString& recordsFilename)
                                "\nВы ввели: \"" + substring +
                                 "\"\nОшибка в записи: " + strOneRecord[i];//в названии свойства есть не только буквы
 
-                    if (substring[j].isUpper())
+                    if (!substring[j].isLower())
                         return "Ошибка! В названии свойства записи не допускается использовать верхний регистр"
                                "\nВы ввели: \"" + substring +
                                 "\"\nОшибка в записи: " + strOneRecord[i];
@@ -194,39 +456,39 @@ QString unzipRecords (const QString& recordsFilename)
 
             if(checkEnd - checkStart == 1)
                 return "Ошибка! Поле между символами '[' и ']' не должно быть пустым"
-                        "\nОшибка в записи: " + strOneRecord[i]; //поле [..] не может быть пустым
+                       "\nОшибка в записи: " + strOneRecord[i]; //поле [..] не может быть пустым
             //Ситоит в следующих 2 if убрать условие strOneRecord[i][checkStart + 1].isSpace() т.к.
 
             if(strOneRecord[i][checkStart + 1].isSpace() || !strOneRecord[i][checkStart+ 1].isNumber())
                 return "Ошибка! Не допускается сразу после символа '[' использование чего-либо, кроме цифр"
-                        "\nОшибка в записи: " + strOneRecord[i]; //если после [ идёт пробел или любой символ кроме числа
+                       "\nОшибка в записи: " + strOneRecord[i]; //если после [ идёт пробел или любой символ кроме числа
 
             if(strOneRecord[i][checkEnd - 1].isSpace() || !strOneRecord[i][checkEnd - 1].isNumber())
                 return "Ошибка! Не допускается сразу перед символом ']' использование чего-либо, кроме цифр"
-                        "\nОшибка в записи: " + strOneRecord[i]; //если перед ] идёт пробел или любой символ кроме числа
+                       "\nОшибка в записи: " + strOneRecord[i]; //если перед ] идёт пробел или любой символ кроме числа
 
             while(strOneRecord[i][position] != "]")
             {
                 if(!strOneRecord[i][position].isNumber() && !strOneRecord[i][position].isSpace() && strOneRecord[i][position] != ",")
                     return "Ошибка! Не допускается использование между символами '[' и ']' всего, кроме 'пробела', ',' или цифр"
-                            "\nОшибка в записи: " + strOneRecord[i];
+                           "\nОшибка в записи: " + strOneRecord[i];
 
                 if(strOneRecord[i][position].isSpace() && strOneRecord[i][position + 1].isSpace())
                     return "Ошибка! Не допускается между символами '[' и ']' использование больше одного 'пробела'"
-                            "\nОшибка в записи: " + strOneRecord[i];
+                           "\nОшибка в записи: " + strOneRecord[i];
 
                 if(strOneRecord[i][position] == "," && strOneRecord[i][position + 1] == ",")
                     return "Ошибка! Не допускается между символами '[' и ']' использование больше одной запятой (',')"
-                            "\nОшибка в записи: " + strOneRecord[i];
+                           "\nОшибка в записи: " + strOneRecord[i];
 
                 if(strOneRecord[i][position].isSpace() && strOneRecord[i][position + 1] == ",")
                     return "Ошибка! Не допускается между символами '[' и ']' использование после 'пробела' запятой (',')"
-                            "\nОшибка в записи: " + strOneRecord[i];
+                           "\nОшибка в записи: " + strOneRecord[i];
 
                 if(strOneRecord[i][position + 1] != "]" && strOneRecord[i][position].isNumber()
                         && !strOneRecord[i][position + 1].isNumber() && strOneRecord[i][position + 1] != ",")
                     return "Ошибка! Между символами '[' и ']' после цифры должна стоять запятая (',')"
-                            "\nОшибка в записи: " + strOneRecord[i];
+                           "\nОшибка в записи: " + strOneRecord[i];
 
                 position ++;
             }
@@ -251,10 +513,10 @@ QString unzipRecords (const QString& recordsFilename)
                 bool ok;
                 int intValue = value.trimmed().toInt(&ok); // преобразуем строку в целое число
                 if (ok)
-                if(intValue < 1 || intValue > 99)
-                    return "Ошибка! Между символами '[' и ']' цифры должны лежать в диапазоне [1;99]"
-                           "\nВы ввели: \"" + value.trimmed() +
-                            "\"\nОшибка в записи: " + strOneRecord[i];
+                    if(intValue < 1 || intValue > 99)
+                        return "Ошибка! Между символами '[' и ']' цифры должны лежать в диапазоне [1;99]"
+                               "\nВы ввели: \"" + value.trimmed() +
+                                "\"\nОшибка в записи: " + strOneRecord[i];
             }
 
             start = strOneRecord[i].indexOf('[', end); // ищем следующий символ "["
@@ -272,43 +534,43 @@ QString unzipRecords (const QString& recordsFilename)
 
             if(!strOneRecord[i][j].isSpace())
                 return "Ошибка! Между символом ':' и названием свойства может быть только 'пробел'"
-                        "\nОшибка в записи: " + strOneRecord[i];
+                       "\nОшибка в записи: " + strOneRecord[i];
 
             if(strOneRecord[i][j].isSpace() && strOneRecord[i][j + 1].isSpace())
-            return "Ошибка! Между символом ':' и названием свойства может быть только один 'пробел'"
-                    "\nОшибка в записи: " + strOneRecord[i];
+                return "Ошибка! Между символом ':' и названием свойства может быть только один 'пробел'"
+                       "\nОшибка в записи: " + strOneRecord[i];
         }
 
-         for(int j = strOneRecord[i].indexOf("]"); j < strOneRecord[i].lastIndexOf("["); j++)
-         {
-             if(strOneRecord[i][j] == "]")
-             {
-                 j += 2;
+        for(int j = strOneRecord[i].indexOf("]"); j < strOneRecord[i].lastIndexOf("["); j++)
+        {
+            if(strOneRecord[i][j] == "]")
+            {
+                j += 2;
 
-                 if(strOneRecord[i][j] == "," || strOneRecord[i][j + 1] == ",")
-                 return "Ошибка! Между концом одного свойства и началом другого должна быть одна запятая и может быть только один 'пробел'"
-                         "\nОшибка в записи: " + strOneRecord[i];
-                 else if(strOneRecord[i][j].isSpace() && strOneRecord[i][j + 1].isSpace())
-                 return "Ошибка! Между концом одного свойства и началом другого должно быть не больше одного 'пробела'"
-                         "\nОшибка в записи: " + strOneRecord[i];
-             }
-         }
+                if(strOneRecord[i][j] == "," || strOneRecord[i][j + 1] == ",")
+                    return "Ошибка! Между концом одного свойства и началом другого должна быть одна запятая и может быть только один 'пробел'"
+                           "\nОшибка в записи: " + strOneRecord[i];
+                else if(strOneRecord[i][j].isSpace() && strOneRecord[i][j + 1].isSpace())
+                    return "Ошибка! Между концом одного свойства и началом другого должно быть не больше одного 'пробела'"
+                           "\nОшибка в записи: " + strOneRecord[i];
+            }
+        }
 
-         if(strOneRecord[i].lastIndexOf("]") < (strOneRecord[i].count() - 1) &&
-                 (strOneRecord[i][strOneRecord[i].lastIndexOf("]") + 1].isSpace() || strOneRecord[i][strOneRecord[i].lastIndexOf("]") + 1] == ","))
-             return "Ошибка! после последнего свойства не может стоять 'пробел' или запятая (',')"
-                     "\nОшибка в записи: " + strOneRecord[i];
+        if(strOneRecord[i].lastIndexOf("]") < (strOneRecord[i].count() - 1) &&
+                (strOneRecord[i][strOneRecord[i].lastIndexOf("]") + 1].isSpace() || strOneRecord[i][strOneRecord[i].lastIndexOf("]") + 1] == ","))
+            return "Ошибка! после последнего свойства не может стоять 'пробел' или запятая (',')"
+                   "\nОшибка в записи: " + strOneRecord[i];
 
 
         //Проверка на то чтобы формат свойст был верный
-         QRegularExpression rex(",(?![^\\[]*\\])");
-             QStringList parts = strOneRecord[i].split(rex, QString::SkipEmptyParts);
+        QRegularExpression rex(",(?![^\\[]*\\])");
+        QStringList parts = strOneRecord[i].split(rex, QString::SkipEmptyParts);
 
-          parts[0] = parts[0].mid(parts[0].indexOf(":") + 1, parts[0].count() - 1);
+        parts[0] = parts[0].mid(parts[0].indexOf(":") + 1, parts[0].count() - 1);
 
-             for (int j = 0; j < parts.count(); j++)
-                 if(parts[j].count("=") == 0)
-                 return "Ошибка! Свойство введено неверно. Вы ввели: \"" + parts[j] + "\"\nВерный формат: 'название свойства'=['целочисленные занчения']";
+        for (int j = 0; j < parts.count(); j++)
+            if(parts[j].count("=") == 0)
+                return "Ошибка! Свойство введено неверно. Вы ввели: \"" + parts[j] + "\"\nВерный формат: 'название свойства'=['целочисленные занчения']";
     }
 
     return "Всё хорошо!";
@@ -547,7 +809,10 @@ int main(int argc, char *argv[])
                           "Запись принадлежит классу «Синий», если у нее есть свойство «цвет», в составе которого есть значение «1»;"
                           "Запись принадлежит классу «Матовый», если у нее есть свойство «покрытие» и значение этого свойства равно «[44, 21]».";
 
-        outStream << unzipRecords(strRecords) << flush;
+        //outStream << checkRecords(strRecords) << flush;
+
+        qDebug() << checkClassificationRule(strRule);
+
         /*distributesRecords(strRecords, &records);
         distributesClassificationRules(strRule, &rules);
         classificationRecordsByRule(records, rules, &result);
