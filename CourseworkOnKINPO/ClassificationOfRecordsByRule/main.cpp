@@ -8,12 +8,12 @@
 #include <QTextCodec>
 #include <QRegularExpression>
 
-bool checkClassificationRule(const QString& strRule)
+QString checkClassificationRule(const QString& strRule)
 {
-    QString rule = "Запись принадлежит классу \"С покрытием\", если у нее есть свойство \"покрытие\";"
+    /*QString rule = "Запись принадлежит классу \"С покрытием\", если у нее есть свойство \"покрытие\";"
                    "Запись принадлежит классу \"Объёмный\", если у нее есть свойство \"размер\", которое представлено двумя значениями;"
                    "Запись принадлежит классу \"Синий\", если у нее есть свойство \"цвет\", в составе которого есть значение \"1\";"
-                   "Запись принадлежит классу \"Матовый\", если у нее есть свойство \"покрытие\" и значение этого свойства равно \"[44, 21]\".";
+                   "Запись принадлежит классу \"Матовый\", если у нее есть свойство \"покрытие\" и значение этого свойства равно \"[44, 21]\".";*/
 
     // Паттерн для проверки первого типа строки
     QString pattern1 = "Запись принадлежит классу \"(.+)\", если у нее есть свойство \"(.+)\"";
@@ -30,28 +30,34 @@ bool checkClassificationRule(const QString& strRule)
     QRegularExpression regex3(pattern2);
     QRegularExpression regex4(pattern1);
 
-    if (!rule.endsWith("."))
-        return false; //Если заканчивается не на точку
-    if (rule.count(".") > 1)
-        return false; //Если больше одной точки
+    if (!strRule.endsWith("."))
+        return "Ошибка! Последнее правило должно заканчиваться на точку ('.')"; //Если заканчивается не на точку
 
-    QStringList strOneRule = rule.split(";", QString::SkipEmptyParts);
+    if (strRule.count(".") > 1)
+        return "Ошибка! В тексте правил может быть только одна точка ('.') и должна находится после последнего правила"; //Если больше одной точки
+
+    QStringList strOneRule = strRule.split(";", QString::SkipEmptyParts);
 
     for(int i = 0; i < strOneRule.count(); i++)
     {
         if(strOneRule[i][strOneRule[i].count() - 1] != "\"" && strOneRule[i][strOneRule[i].count() - 1] != "."
                 && strOneRule[i][strOneRule[i].count() - 1] != "и" && strOneRule[i][strOneRule[i].count() - 1] != "м")
-            return false;  //Если последний символ не " не 'и' не .
+            return "Ошибка! Неверный формат ввода. Правило должно заканчиваться на следующие символы ('\" или '.' или 'и' или 'м')"
+                   " в зависимости от типа правила."
+                   "\nОшибка в правиле: " + strOneRule[i];  //Если последний символ не " не 'и' не .
 
         if(strOneRule[i][0].isSpace())
-            return false; //Первый символ не может быть пробелом
+            return "Ошибка! Правило не может начинаться с пробела"
+                    "\nОшибка в правиле: " + strOneRule[i]; //Первый символ не может быть пробелом
 
         for(int j = 0; j < strOneRule[i].count() - 1; j++)
             if(strOneRule[i][j].isSpace() && strOneRule[i][j + 1].isSpace())
-                return false; //Нельзя больше одного пробела
+                return "Ошибка! В тексте правила не допускается использовать больше одного пробела"
+                        "\nОшибка в правиле: " + strOneRule[i]; //Нельзя больше одного пробела
 
         if(strOneRule[i].count("\"") != 4 && strOneRule[i].count("\"") != 6)
-            return false; // символов "" должно быть либо 4 либо 6
+            return "Ошибка! В правиле должно быть либо 4, либо 6 кавычек ('\"') в зависимости от типа правила"
+                    "\nОшибка в правиле: " + strOneRule[i]; // символов "" должно быть либо 4 либо 6
 
         //---------------Провека правильности названия класса и ограничения-------------------------------------
         if(regex1.match(strOneRule[i]).hasMatch() || regex2.match(strOneRule[i]).hasMatch()
@@ -75,32 +81,49 @@ bool checkClassificationRule(const QString& strRule)
 
             for(int j = 0; j < 2; j++)
             if(!substrings[j][0].isLetter() || !substrings[j][substrings[j].count() - 1].isLetter())
-                return false; //нелья после " и перед " савить что-то кроме буквы
+                return "Ошибка! Внутри кавычек ('\"') текст не может начинаться и заканчиваться не буквой"
+                        "\nВы ввели: " + substrings[j] +
+                        "\nОшибка в правиле: " + strOneRule[i]; //нелья после " и перед " савить что-то кроме буквы
 
             if(substrings[0].count() < 3 || substrings[0].count() > 20)
-                return false; //Название класса не может быть меньше 3 или больше 20
+                return "Ошибка! Название класса не может быть меньше трёх или больше двадцати символов"
+                        "\nВы ввели: " + substrings[0] +
+                        "\nОшибка в правиле: " + strOneRule[i]; //Название класса не может быть меньше 3 или больше 20
 
             if(substrings[1].count() < 3 || substrings[1].count() > 20)
-                return false; // Ограничение не может быть меньше 3 или больше 20
+                return "Ошибка! Текстовое ограничение правила не может быть меньше трёх или больше двадцати символов"
+                        "\nВы ввели: " + substrings[1] +
+                        "\nОшибка в правиле: " + strOneRule[i]; // Ограничение не может быть меньше 3 или больше 20
 
             if(!substrings[0][0].isUpper())
-                return false; //Название класса начинается с заглавной буквы
+                return "Ошибка! Название класса должно начинаться с заглавной буквы"
+                        "\nВы ввели " + substrings[0] +
+                        "\nОшибка в правиле: " + strOneRule[i]; //Название класса начинается с заглавной буквы
 
             for(int j = 1; j < substrings[0].count(); j++)
                 if(!substrings[0][j].isSpace() && substrings[0][j].isUpper())
-                    return false; //Все кроме заглавной буквы на названии класса должны быть в нижнем регистре
+                    return "Ошибка! В названии класса все буквы, кроме заглавной, должны быть в нижнем регистре"
+                            "\nВы ввели: " + substrings[0] +
+                            "\nОшибка в правиле: " + strOneRule[i]; //Все кроме заглавной буквы на названии класса должны быть в нижнем регистре
 
             for(int j = 0; j < substrings[0].count(); j++)
                 if(!substrings[0][j].isLetter() && !substrings[0][j].isSpace())
-                    return false; //Название класса может содержать только буквы и пробел
+                    return "Ошибка! В названии класса допускается использование только букв русского или английского алфавита "
+                           "и пробелов (не больше одного подряд)"
+                            "\nВы ввели: " + substrings[0] +
+                            "\nОшибка в правиле: " + strOneRule[i]; //Название класса может содержать только буквы и пробел
 
             for(int j = 0; j < substrings[1].count(); j++)
                 if(!substrings[1][j].isLetter() || substrings[1][j].isSpace())
-                    return false; //Ограничение может содержать только буквы без пробелов
+                    return "Ошибка! Текстовое ограничение может содержать только буквы русского или английского алфавита и не должно содержать пробелы"
+                            "\nВы ввели: " + substrings[1] +
+                            "\nОшибка в правиле: " + strOneRule[i]; //Ограничение может содержать только буквы без пробелов
 
             for(int j = 0; j < substrings[1].count(); j++)
                 if(!substrings[1].isLower())
-                    return false; //Ограничение может быть только в нижнем регистре
+                    return "Ошибка! Текстовое ограничение может содержать только буквы в нижнем регистре"
+                            "\nВы ввели: " + substrings[1] +
+                            "\nОшибка в правиле: " + strOneRule[i]; //Ограничение может быть только в нижнем регистре
 
             //------------------------------------------------------------------------------------------------------
 
@@ -108,14 +131,21 @@ bool checkClassificationRule(const QString& strRule)
             {
 
              if(strOneRule[i].count("[") != 1 && strOneRule[i].count("]") != 1)
-                 return false; //[ ] должно быть по одному
+                 return "Ошибка! Неверный формат ввода правила с несколькими целочисленными ограничениями. "
+                        "\nДанный тип правила должен содержать по одному символу '[' и ']'"
+                         "\nОшибка в правиле: " + strOneRule[i]; //[ ] должно быть по одному
 
              if(strOneRule[i].indexOf("]") + 2 != strOneRule[i].count() && strOneRule[i].count(".") == 0)
-                 return false; //Неверный формат воода, после []" строка должна заканчиваться
+                 return "Ошибка! Неверный формат ввода правила с несколькими целочисленными ограничениями. "
+                        "\nДанный тип правила должен заканчиваться на ']\"'"
+                         "\nОшибка в правиле: " + strOneRule[i]; //Неверный формат воода, после []" строка должна заканчиваться
 
              if(strOneRule[i].count(".") == 1 && strOneRule[i][strOneRule[i].indexOf("]") + 2] != ".")
+                 return "Ошибка! Неверный формат ввода правила с несколькими целочисленными ограничениями. "
+                        "\nДанный тип правила должен заканчиваться на ']\".'"
+                         "\nОшибка в правиле: " + strOneRule[i]; //Неверный формат воода, после []" строка должна заканчиваться
 
-                 return false; //Неверный формат воода, после []" строка должна заканчиваться
+
              //----------------------------------Проверка на то что в [] могут быть только определённые символы и определённое число пробелолв
              //----------------------------------и запятых и не может быть побел и запятая подряд--------------------------------------------
              int checkStart = strOneRule[i].indexOf('['); // ищем первый символ "["
@@ -125,36 +155,52 @@ bool checkClassificationRule(const QString& strRule)
              position = checkStart + 1;
 
              if(checkEnd - checkStart == 1)
-                 return false; //поле [..] не может быть пустым
+                 return "Ошибка! Неверный формат ввода правила с несколькими целочисленными ограничениями. "
+                         "\nПоле между символами '[' и ']' не должно быть пустым"
+                         "\nОшибка в правиле: " + strOneRule[i]; //поле [..] не может быть пустым
              //Ситоит в следующих 2 if убрать условие strOneRecord[i][checkStart + 1].isSpace() т.к.
 
              if(strOneRule[i][checkStart + 1].isSpace() || !strOneRule[i][checkStart+ 1].isNumber())
-                 return false; //если после [ идёт пробел или любой символ кроме числа
+                 return "Ошибка! Неверный формат ввода правила с несколькими целочисленными ограничениями. "
+                        "\nНе допускается сразу после символа '[' использование чего-либо, кроме цифр"
+                        "\nОшибка в правиле: " + strOneRule[i]; //если после [ идёт пробел или любой символ кроме числа
 
              if(strOneRule[i][checkEnd - 1].isSpace() || !strOneRule[i][checkEnd - 1].isNumber())
-                 return false; //если перед ] идёт пробел или любой символ кроме числа
+                 return "Ошибка! Неверный формат ввода правила с несколькими целочисленными ограничениями. "
+                        "\nНе допускается сразу перед символом ']' использование чего-либо, кроме цифр"
+                        "\nОшибка в правиле: " + strOneRule[i]; //если перед ] идёт пробел или любой символ кроме числа
 
              while(strOneRule[i][position] != "]")
              {
                  if(!strOneRule[i][position].isNumber() && !strOneRule[i][position].isSpace() && strOneRule[i][position] != ",")
-                     return false; //Не допускается использование между символами '[' и ']' всего, кроме 'пробела', ',' или цифр"
+                     return "Ошибка! Неверный формат ввода правила с несколькими целочисленными ограничениями. "
+                            "\nНе допускается использование между символами '[' и ']' всего, кроме 'пробела', ',' или цифр"
+                            "\nОшибка в правиле: " + strOneRule[i]; //Не допускается использование между символами '[' и ']' всего, кроме 'пробела', ',' или цифр"
 
 
                  if(strOneRule[i][position].isSpace() && strOneRule[i][position + 1].isSpace())
-                     return false; //"Ошибка! Не допускается между символами '[' и ']' использование больше одного 'пробела'"
+                     return "Ошибка! Неверный формат ввода правила с несколькими целочисленными ограничениями. "
+                            "\nНе допускается между символами '[' и ']' использование больше одного 'пробела'"
+                            "\nОшибка в правиле: " + strOneRule[i]; //"Ошибка! Не допускается между символами '[' и ']' использование больше одного 'пробела'"
 
 
                  if(strOneRule[i][position] == "," && strOneRule[i][position + 1] == ",")
-                     return false; //"Ошибка! Не допускается между символами '[' и ']' использование больше одной запятой (',')"
+                     return "Ошибка! Неверный формат ввода правила с несколькими целочисленными ограничениями. "
+                            "\nНе допускается между символами '[' и ']' использование больше одной запятой (',')"
+                            "\nОшибка в правиле: " + strOneRule[i]; //"Ошибка! Не допускается между символами '[' и ']' использование больше одной запятой (',')"
 
 
                  if(strOneRule[i][position].isSpace() && strOneRule[i][position + 1] == ",")
-                     return false; //"Ошибка! Не допускается между символами '[' и ']' использование после 'пробела' запятой (',')"
+                     return "Ошибка! Неверный формат ввода правила с несколькими целочисленными ограничениями. "
+                            "\nНе допускается между символами '[' и ']' использование после 'пробела' запятой (',')"
+                            "\nОшибка в правиле: " + strOneRule[i]; //"Ошибка! Не допускается между символами '[' и ']' использование после 'пробела' запятой (',')"
 
 
                  if(strOneRule[i][position + 1] != "]" && strOneRule[i][position].isNumber()
                          && !strOneRule[i][position + 1].isNumber() && strOneRule[i][position + 1] != ",")
-                     return false; //"Ошибка! Между символами '[' и ']' после цифры должна стоять запятая (',')"
+                     return "Ошибка! Неверный формат ввода правила с несколькими целочисленными ограничениями. "
+                            "\nМежду символами '[' и ']' после цифры должна стоять запятая (',')"
+                            "\nОшибка в правиле: " + strOneRule[i]; //"Ошибка! Между символами '[' и ']' после цифры должна стоять запятая (',')"
 
                  position ++;
              }
@@ -176,7 +222,10 @@ bool checkClassificationRule(const QString& strRule)
                      int intValue = value.trimmed().toInt(&ok); // преобразуем строку в целое число
                      if (ok)
                          if(intValue < 1 || intValue > 99)
-                             return false; //"Ошибка! Между символами '[' и ']' цифры должны лежать в диапазоне [1;99]"
+                             return "Ошибка! Неверный формат ввода правила с несколькими целочисленными ограничениями. "
+                                    "\nМежду символами '[' и ']' цифры должны лежать в диапазоне [1;99]"
+                                     "\nВы ввели: " + value.trimmed() +
+                                    "\nОшибка в правиле: " + strOneRule[i]; //"Ошибка! Между символами '[' и ']' цифры должны лежать в диапазоне [1;99]"
 
                  }
              //-----------------------------------------------------------------------------------------------------------------------------------------
@@ -184,34 +233,52 @@ bool checkClassificationRule(const QString& strRule)
             else if (regex2.match(strOneRule[i]).hasMatch())
             {
                 if(strOneRule[i].lastIndexOf("\"") + 1 != strOneRule[i].count() && strOneRule[i].count(".") == 0)
-                    return false; //Ошибка в написании (Больше чем шаблон)
+                    return "Ошибка! Неверный формат ввода правила с одним целочисленным значением. "
+                           "\nПравило должно заканчиваться на ' \" '"
+                            "\nОшибка в правиле: " + strOneRule[i]; //Ошибка в написании (Больше чем шаблон)
 
                 if(strOneRule[i].count(".") == 1 && strOneRule[i][strOneRule[i].lastIndexOf("\"") + 1] != ".")
-                    return false; //Ошибка в написании (Больше чем шаблон)
+                    return "Ошибка! Неверный формат ввода правила с одним целочисленным значением. "
+                           "\nПравило должно заканчиваться на ' \". '"
+                            "\nОшибка в правиле: " + strOneRule[i]; //Ошибка в написании (Больше чем шаблон)
 
                 for(int j = 0; j < substrings[2].count(); j++)
                     if(!substrings[2][j].isNumber())
-                        return false; //Можно использовать только цифры
+                        return "Ошибка! Неверный формат ввода правила с одним целочисленным значением. "
+                               "\nМежду последними двумя символами ' \" ' должно быть целочисленное значение и только одно"
+                               "\nВы ввели: " + substrings[2] +
+                                "\nОшибка в правиле: " + strOneRule[i]; //Можно использовать только цифры
 
                 if(substrings[2].toInt() < 1 || substrings[2].toInt() > 99)
-                    return false; //Нельзя чтобы число было меньше 1 и больше 99
+                    return "Ошибка! Неверный формат ввода правила с одним целочисленным значением. "
+                           "\nЦелочисленное значение должно лежать в диапазоне [1;99]"
+                           "\nВы ввели: " + substrings[2] +
+                            "\nОшибка в правиле: " + strOneRule[i]; //Нельзя чтобы число было меньше 1 и больше 99
 
             }
             else if (regex3.match(strOneRule[i]).hasMatch())
             {
                 if(strOneRule[i].count("\"") != 4)
-                    return false; //символов " должно быть 4
+                    return "Ошибка! Неверный формат ввода правила с допустимым количеством целочисленных значений записи"
+                           "\nКоличество символов ' \" ' должно быть равно четырём"
+                            "\nОшибка в правиле: " + strOneRule[i]; //символов " должно быть 4
 
                 if(strOneRule[i].lastIndexOf("и") + 1 != strOneRule[i].count() && strOneRule[i].lastIndexOf("м") + 1 != strOneRule[i].count()
                         && strOneRule[i].count(".") == 0)
-                    return false; //Не соответствует шаблону
+                    return "Ошибка! Неверный формат ввода правила с допустимым количеством целочисленных значений записи"
+                           "\nПравило должно заканичиваться на 'м' или 'и', в зависимости от указанного значения (одним) или (двумя - девятью)"
+                            "\nОшибка в правиле: " + strOneRule[i]; //Не соответствует шаблону
 
                 if(strOneRule[i].count(".") == 1 && (strOneRule[i][strOneRule[i].lastIndexOf("и") + 1] != "."
                                                      || strOneRule[i][strOneRule[i].lastIndexOf("м") + 1] != "."))
-                    return false; //Не соответсвует шаблону
+                    return "Ошибка! Неверный формат ввода правила с допустимым количеством целочисленных значений записи"
+                           "\nПравило должно заканичиваться на 'м.' или 'и.', в зависимости от указанного значения (одним) или (двумя - девятью)"
+                            "\nОшибка в правиле: " + strOneRule[i]; //Не соответсвует шаблону
 
                 if (!strOneRule[i].contains("значением") && !strOneRule[i].contains("значениями"))
-                    return false; //Нет слов значением или значениями
+                    return "Ошибка! Неверный формат ввода правила с допустимым количеством целочисленных значений записи"
+                           "\nОтсутствует слово 'значением' или 'значениями', в зависимости от указанного значения (одним) или (двумя - девятью)"
+                            "\nОшибка в правиле: " + strOneRule[i]; //Нет слов значением или значениями
 
                 //---------------------------ПОД ВОПРОСОМ НУЖНО ЛИ ЕСЛИ УЖЕ ЕСТЬ ШАБЛОН--------------------------------------
                 QString value_1 = "одним";
@@ -227,46 +294,80 @@ bool checkClassificationRule(const QString& strRule)
                 if(!strOneRule[i].contains(value_1) && !strOneRule[i].contains(value_2) && !strOneRule[i].contains(value_3) &&
                         !strOneRule[i].contains(value_4) && !strOneRule[i].contains(value_5) && !strOneRule[i].contains(value_6) &&
                         !strOneRule[i].contains(value_7) && !strOneRule[i].contains(value_8) && !strOneRule[i].contains(value_9))
-                return false; //Нет ни одного из доступных значений
+                return "Ошибка! Неверный формат ввода правила с допустимым количеством целочисленных значений записи"
+                       "\nНеверно указано количество допустимых значений в записи."
+                       "\nДопустимы следующие значения: " + value_1 + ", " + value_2 + ", " + value_3 + ", " + value_4 + ", " + value_5 + ", "
+                        + value_6 + ", " + value_7 + ", " + value_8 + ", " + value_9 +
+                        "\nОшибка в правиле: " + strOneRule[i]; //Нет ни одного из доступных значений
 
                 if(strOneRule[i].contains(value_1) && !strOneRule[i].contains("значением"))
-                    return false; //одним должно быть в единственном числе
+                    return "Ошибка! Неверный формат ввода правила с допустимым количеством целочисленных значений записи"
+                           "\nЕсли было введено 'одним', то правило должно заканчиваться на 'значением'"
+                            "\nОшибка в правиле: " + strOneRule[i]; //одним должно быть в единственном числе
 
                 if(!strOneRule[i].contains(value_1) && !strOneRule[i].contains("значениями"))
-                    return false; //Должно быть во множественном числе
+                    return "Ошибка! Неверный формат ввода правила с допустимым количеством целочисленных значений записи"
+                           "\nЕсли было введено ('двумя' - 'девятью'), то правило должно заканчиваться на 'значениями'"
+                            "\nОшибка в правиле: " + strOneRule[i]; //Должно быть во множественном числе
 
                 if(strOneRule[i].count(value_1) > 1 || strOneRule[i].count(value_2) > 1 || strOneRule[i].count(value_3) > 1 ||
                         strOneRule[i].count(value_4) > 1 || strOneRule[i].count(value_5) > 1 || strOneRule[i].count(value_6) > 1 ||
                         strOneRule[i].count(value_7) > 1 || strOneRule[i].count(value_8) > 1 || strOneRule[i].count(value_9) > 1)
-                    return false; //не может встречаться больше 1 из предложенных значений
+                    return "Ошибка! Неверный формат ввода правила с допустимым количеством целочисленных значений записи"
+                           "\nОграничение по количеству целочисленных значений записи должно быть представлено единственным значением"
+                            "\nОшибка в правиле: " + strOneRule[i]; //не может встречаться больше 1 из предложенных значений
 
                 if(strOneRule[i].count("значением") > 1 || strOneRule[i].count("значениями") > 1)
-                    return false; //НЕ может быть больше одного
+                    return "Ошибка! Неверный формат ввода правила с допустимым количеством целочисленных значений записи"
+                           "\nПравило должно содержать одно слово 'значением' или 'значениями'"
+                            "\nОшибка в правиле: " + strOneRule[i]; //НЕ может быть больше одного
+
+                if((strOneRule[i].count("значением") == 1 && strOneRule[i].count("значениями") != 0)
+                        || (strOneRule[i].count("значением") != 0 && strOneRule[i].count("значениями") == 1))
+                    return "Ошибка! Неверный формат ввода правила с допустимым количеством целочисленных значений записи"
+                           "\nПравило должно содержать одно слово 'значением' или 'значениями'"
+                            "\nОшибка в правиле: " + strOneRule[i]; //НЕ может быть больше одного
+
 
                 QStringList strLastValue = strOneRule[i].split(" ");
 
                 if(strLastValue[strLastValue.count() - 1] != "значением" && strLastValue[strLastValue.count() - 1] != "значениями"
                         && strLastValue[strLastValue.count() - 1] != "значением." && strLastValue[strLastValue.count() - 1] != "значениями.")
-                    return false; //НЕ заканчивается на значением
+                    return "Ошибка! Неверный формат ввода правила с допустимым количеством целочисленных значений записи"
+                           "\nПравило должно заканчиваться на слово 'значением' или 'значениями'"
+                            "\nОшибка в правиле: " + strOneRule[i]; //НЕ заканчивается на значением
 
             }
             else if (regex4.match(strOneRule[i]).hasMatch())
             {
                 if(strOneRule[i].count("\"") != 4)
-                    return false; //символов " должно быть 4
+                    return "Ошибка! Неверный формат ввода правила без дополнительного целочисленного ограничения"
+                           "\nКоличество символов ' \" ' должно быть равно четырём"
+                            "\nОшибка в правиле: " + strOneRule[i]; //символов " должно быть 4
 
                 if(strOneRule[i].lastIndexOf("\"") + 1 != strOneRule[i].count() && strOneRule[i].count(".") == 0)
-                    return false; //Ошибка в написании (Больше чем шаблон)
+                    return "Ошибка! Неверный формат ввода правила без дополнительного целочисленного ограничения"
+                           "\nПравило должно заканчиваться на символ ' \" '"
+                            "\nОшибка в правиле: " + strOneRule[i]; //Ошибка в написании (Больше чем шаблон)
 
                 if(strOneRule[i].count(".") == 1 && strOneRule[i][strOneRule[i].lastIndexOf("\"") + 1] != ".")
-                    return false; //Ошибка в написании (Больше чем шаблон)
+                    return "Ошибка! Неверный формат ввода правила без дополнительного целочисленного ограничения"
+                           "\nПравило должно заканчиваться на символ ' \". '"
+                            "\nОшибка в правиле: " + strOneRule[i]; //Ошибка в написании (Больше чем шаблон)
             }
         }
         else
-            return false; // Не подошло ни по одному из шаблонов true только если проходит все проверки одного из шаблонов
+            return "Ошибка! Неверный формат ввода правила"
+                   "\nОшибка в правиле: " + strOneRule[i] +
+                   "\nДопустимые форматы: "
+                   "\n1) 'Запись принадлежит классу \"<название класса>\", если у нее есть свойство \"<название свойства>\"'"
+                   "\n2) 'Запись принадлежит классу \"<название класса>\", если у нее есть свойство \"<название свойства>\", которое представлено ([одним|двумя|тремя|четырьмя|пятью|шестью|семью|восемью|девятью]) значением(ями)'"
+                   "\n3) 'Запись принадлежит классу \"<название класса>\", если у нее есть свойство \"<название свойства>\", в составе которого есть значение \"<одно целочисленное значение>\"'"
+                   "\n4) 'Запись принадлежит классу \"<название класса>\", если у нее есть свойство \"<название свойства>\" и значение этого свойства равно \"[целочисленные значения через ',']\"'";
+                    // Не подошло ни по одному из шаблонов true только если проходит все проверки одного из шаблонов
     }
 
-    return true;
+    return "Всё хорошо!";
 
 }
 
@@ -576,97 +677,98 @@ QString checkRecords (const QString& strRecords)
     return "Всё хорошо!";
 }
 
+
 void distributesClassificationRules(const QString& rulesData, QList<ClassificationRules>* classificationRules)
 {
     QStringList substringsRules = rulesData.split(";");
 
     for(int i = 0; i < substringsRules.count(); i++)
     {
-     ClassificationRules *newRule = new ClassificationRules;
+        ClassificationRules *newRule = new ClassificationRules;
 
-    QRegExp classRx("«([^»]+)»"); // находим слова внутри кавычек « »
-    QRegExp propertyRx("свойство «([^»]+)»"); // находим слова после слова "свойство «" и до закрывающей кавычки
+        QRegExp classRx("\"([^\"]+)\""); // находим слова внутри кавычек \" \"
+        QRegExp propertyRx("свойство \"([^\"]+)\""); // находим слова после слова "свойство \"" и до закрывающей кавычки
 
-    int classPos = classRx.indexIn(substringsRules[i]);
-    if (classPos != -1)
-       newRule->setName(classRx.cap(1));
+        int classPos = classRx.indexIn(substringsRules[i]);
+        if (classPos != -1)
+            newRule->setName(classRx.cap(1));
 
-    int propertyPos = propertyRx.indexIn(substringsRules[i]);
-    if (propertyPos != -1)
-        newRule->setConstraint(propertyRx.cap(1));
+        int propertyPos = propertyRx.indexIn(substringsRules[i]);
+        if (propertyPos != -1)
+            newRule->setConstraint(propertyRx.cap(1));
 
 
-    QString withLength = "которое представлено";
-    QString singleValue = "в составе которого есть значение";
-    QString severalValues = "и значение этого свойства равно";
+        QString withLength = "которое представлено";
+        QString singleValue = "в составе которого есть значение";
+        QString severalValues = "и значение этого свойства равно";
 
-    if(substringsRules[i].contains(withLength))
-    {
-        newRule->condition = propertyWithLength;
-
-     if(substringsRules[i].contains("одним"))
-         newRule->value = Single;
-     else if(substringsRules[i].contains("двумя"))
-         newRule->value = Two;
-     else if(substringsRules[i].contains("тремя"))
-         newRule->value = Three;
-     else if(substringsRules[i].contains("четырьмя"))
-         newRule->value = Four;
-     else if(substringsRules[i].contains("пятью"))
-         newRule->value = Five;
-     else if(substringsRules[i].contains("шестью"))
-         newRule->value = Six;
-     else if(substringsRules[i].contains("семью"))
-         newRule->value = Seven;
-     else if(substringsRules[i].contains("восемью"))
-         newRule->value = Eight;
-     else if(substringsRules[i].contains("девятью"))
-         newRule->value = Nine;
-    }
-    else if(substringsRules[i].contains(singleValue))
-    {
-        newRule->condition = propertySingleValue;
-        newRule->value = NotQuantity;
-
-        QRegExp rxValue("(\\d+)");
-        int pos = 0;
-        while ((pos = rxValue.indexIn(substringsRules[i], pos)) != -1)
+        if(substringsRules[i].contains(withLength))
         {
-            newRule->setIntegerValues(rxValue.cap(1).toInt());
-            pos += rxValue.matchedLength();
+            newRule->condition = propertyWithLength;
+
+            if(substringsRules[i].contains("одним"))
+                newRule->value = Single;
+            else if(substringsRules[i].contains("двумя"))
+                newRule->value = Two;
+            else if(substringsRules[i].contains("тремя"))
+                newRule->value = Three;
+            else if(substringsRules[i].contains("четырьмя"))
+                newRule->value = Four;
+            else if(substringsRules[i].contains("пятью"))
+                newRule->value = Five;
+            else if(substringsRules[i].contains("шестью"))
+                newRule->value = Six;
+            else if(substringsRules[i].contains("семью"))
+                newRule->value = Seven;
+            else if(substringsRules[i].contains("восемью"))
+                newRule->value = Eight;
+            else if(substringsRules[i].contains("девятью"))
+                newRule->value = Nine;
         }
-
-        newRule->arrIntegerValues.append(newRule->getIntegerValues());
-    }
-    else if(substringsRules[i].contains(severalValues))
-    {
-        newRule->condition = propertyWithSeveralValues;
-        newRule->value = NotQuantity;
-
-        int start = substringsRules[i].indexOf('['); // ищем первый символ "["
-        int end = substringsRules[i].indexOf(']'); // ищем первый символ "]"
-
-        QString substring = substringsRules[i].mid(start + 1, end - start - 1); // вырезаем подстроку между скобками
-        QStringList values = substring.split(",", QString::SkipEmptyParts); // разделяем подстроку по запятой
-        for (const QString& value : values)
+        else if(substringsRules[i].contains(singleValue))
         {
-            bool ok;
-            int intValue = value.trimmed().toInt(&ok); // преобразуем строку в целое число
-            if (ok)
+            newRule->condition = propertySingleValue;
+            newRule->value = NotQuantity;
+
+            QRegExp rxValue("(\\d+)");
+            int pos = 0;
+            while ((pos = rxValue.indexIn(substringsRules[i], pos)) != -1)
             {
-                newRule->setIntegerValues(intValue); // выводим полученные значения
-                newRule->arrIntegerValues.append(newRule->getIntegerValues());
+                newRule->setIntegerValues(rxValue.cap(1).toInt());
+                pos += rxValue.matchedLength();
+            }
+
+            newRule->arrIntegerValues.append(newRule->getIntegerValues());
+        }
+        else if(substringsRules[i].contains(severalValues))
+        {
+            newRule->condition = propertyWithSeveralValues;
+            newRule->value = NotQuantity;
+
+            int start = substringsRules[i].indexOf('['); // ищем первый символ "["
+            int end = substringsRules[i].indexOf(']'); // ищем первый символ "]"
+
+            QString substring = substringsRules[i].mid(start + 1, end - start - 1); // вырезаем подстроку между скобками
+            QStringList values = substring.split(",", QString::SkipEmptyParts); // разделяем подстроку по запятой
+            for (const QString& value : values)
+            {
+                bool ok;
+                int intValue = value.trimmed().toInt(&ok); // преобразуем строку в целое число
+                if (ok)
+                {
+                    newRule->setIntegerValues(intValue); // выводим полученные значения
+                    newRule->arrIntegerValues.append(newRule->getIntegerValues());
+                }
             }
         }
-    }
-    else
-    {
-        newRule->condition = propertyWithNoValue;
-        newRule->value = NotQuantity;
-    }
+        else
+        {
+            newRule->condition = propertyWithNoValue;
+            newRule->value = NotQuantity;
+        }
 
-    classificationRules->append(*newRule);
-    delete newRule;
+        classificationRules->append(*newRule);
+        delete newRule;
     }
 }
 
@@ -695,29 +797,30 @@ void distributesRecords(const QString& recordsData, QList<Records>* record)
             pos += rxPropertes.matchedLength();
 
             //-------------------------------------------------------------------------------------------------------------------
-                QString substring = substringsRecords[i].mid(start + 1, end - start - 1); // вырезаем подстроку между скобками
-                QStringList values = substring.split(",", QString::SkipEmptyParts); // разделяем подстроку по запятой
-                for (const QString& value : values)
+            QString substring = substringsRecords[i].mid(start + 1, end - start - 1); // вырезаем подстроку между скобками
+            QStringList values = substring.split(",", QString::SkipEmptyParts); // разделяем подстроку по запятой
+            for (const QString& value : values)
+            {
+                bool ok;
+                int intValue = value.trimmed().toInt(&ok); // преобразуем строку в целое число
+                if (ok)
                 {
-                    bool ok;
-                    int intValue = value.trimmed().toInt(&ok); // преобразуем строку в целое число
-                    if (ok)
-                    {
-                       newRecord->setIntegerValues(intValue); // выводим полученные значения
-                       newRecord->arrIntegerValues.append(newRecord->getIntegerValues());
-                    }
+                    newRecord->setIntegerValues(intValue); // выводим полученные значения
+                    newRecord->arrIntegerValues.append(newRecord->getIntegerValues());
                 }
-                start = substringsRecords[i].indexOf('[', end); // ищем следующий символ "["
-                end = substringsRecords[i].indexOf(']', end + 1); // ищем следующий символ "]"
+            }
+            start = substringsRecords[i].indexOf('[', end); // ищем следующий символ "["
+            end = substringsRecords[i].indexOf(']', end + 1); // ищем следующий символ "]"
             //----------------------------------------------------------------------------------------------------------------------
 
-           newRecord->recordIntegerValues.insert(newRecord->getPropertes(), newRecord->arrIntegerValues);
-           newRecord->arrIntegerValues.clear();
+            newRecord->recordIntegerValues.insert(newRecord->getPropertes(), newRecord->arrIntegerValues);
+            newRecord->arrIntegerValues.clear();
         }
         record->append(*newRecord);
         delete newRecord;
     }
 }
+
 
 void classificationRecordsByRule (const QList<Records>& records, const QList<ClassificationRules>& classificationRules, QList<Result>* result)
 {
@@ -795,8 +898,8 @@ int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
 
-    QTextStream outStream(stdout);
-         outStream.setCodec(QTextCodec::codecForName("cp866"));
+        QTextStream outStream(stdout);
+        outStream.setCodec(QTextCodec::codecForName("cp866"));
 
         QList<Records> records;
         QList<ClassificationRules> rules;
@@ -804,18 +907,20 @@ int main(int argc, char *argv[])
 
         QString strRecords = "Шкаф: цвет=[1, 2], размер=[10,12,15];Стол: размер=[12, 15], цвет=[1, 15], покрытие=[12].";
 
-        QString strRule = "Запись принадлежит классу «С покрытием», если у нее есть свойство «покрытие»;"
-                          "Запись принадлежит классу «Объёмный», если у нее есть свойство «размер», которое представлено тремя значениями;"
-                          "Запись принадлежит классу «Синий», если у нее есть свойство «цвет», в составе которого есть значение «1»;"
-                          "Запись принадлежит классу «Матовый», если у нее есть свойство «покрытие» и значение этого свойства равно «[44, 21]».";
+        QString strRule = "Запись принадлежит классу \"С покрытием\", если у нее есть свойство \"покрытие\";"
+                          "Запись принадлежит классу \"Объёмный\", если у нее есть свойство \"размер\", которое представлено двумя значениями;"
+                          "Запись принадлежит классу \"Синий\", если у нее есть свойство \"цвет\", в составе которого есть значение \"1\";"
+                          "Запись принадлежит классу \"Матовый\", если у нее есть свойство \"покрытие\" и значение этого свойства равно \"[44, 21]\".";
 
-        //outStream << checkRecords(strRecords) << flush;
+        QString errRecord = checkRecords(strRecords);
+        QString errRule = checkClassificationRule(strRule);
 
-        qDebug() << checkClassificationRule(strRule);
-
-        /*distributesRecords(strRecords, &records);
+        if(!errRule.contains("Ошибка!") && !errRecord.contains("Ошибка!"))
+        {
+        distributesRecords(strRecords, &records);
         distributesClassificationRules(strRule, &rules);
         classificationRecordsByRule(records, rules, &result);
+
 
         for(int i = 0; i < result.count(); i++)
         {
@@ -823,138 +928,19 @@ int main(int argc, char *argv[])
             for(int j = 0; j < result[i].resultRecordName.count(); j++)
                 outStream << result[i].resultRecordName[j] << ", " << flush;
             outStream << "\n\n" << flush;
-        }*/
+        }
+        }
+        else
+        {
+            if(errRule.contains("Ошибка!") && errRecord.contains("Ошибка!"))
+             outStream << errRecord << "\n\n" << errRule << flush;
 
-        /*Records *rec = new Records;
-        rec->setName("stol");
+            else if(errRule.contains("Ошибка!") && !errRecord.contains("Ошибка!"))
+                outStream << errRule << flush;
 
-        rec->recordPropertes.append("cvet");
-        rec->recordPropertes.append("razmer");
-        rec->recordPropertes.append("material");
+            else if(!errRule.contains("Ошибка!") && errRecord.contains("Ошибка!"))
+                outStream << errRecord << flush;
+        }
 
-        rec->arrIntegerValues << 1 << 5 << 3 << 4;
-        rec->recordIntegerValues.insert("cvet", rec->arrIntegerValues);
-        rec->arrIntegerValues.clear();
-
-        rec->arrIntegerValues << 12 << 25 << 8;
-        rec->recordIntegerValues.insert("razmer", rec->arrIntegerValues);
-        rec->arrIntegerValues.clear();
-
-        rec->arrIntegerValues << 3 << 4 << 1;
-        rec->recordIntegerValues.insert("material", rec->arrIntegerValues);
-
-
-        Records *rec2 = new Records;
-        rec2->setName("kover");
-
-        rec2->recordPropertes.append("cvet");
-        rec2->recordPropertes.append("razmer");
-        rec2->recordPropertes.append("yzor");
-
-        rec2->arrIntegerValues << 12 << 10 << 14;
-        rec2->recordIntegerValues.insert("cvet", rec2->arrIntegerValues);
-        rec2->arrIntegerValues.clear();
-
-        rec2->arrIntegerValues << 10 << 5 << 8;
-        rec2->recordIntegerValues.insert("razmer", rec2->arrIntegerValues);
-        rec2->arrIntegerValues.clear();
-
-        rec2->arrIntegerValues << 1 << 2 << 3;
-        rec2->recordIntegerValues.insert("yzor", rec2->arrIntegerValues);
-
-
-
-        ClassificationRules *rul = new ClassificationRules;
-        rul->setName("s cvetom");
-        rul->setConstraint("cvet");
-        rul->condition = propertyWithLength;
-        rul->value = Three;
-
-
-
-        ClassificationRules *rul2 = new ClassificationRules;
-        rul2->setName("s razmerom");
-        rul2->setConstraint("razmer");
-        rul2->condition = propertySingleValue;
-        rul2->value = NotQuantity;
-
-        rul2->arrIntegerValues << 8;
-
-        records << *rec << *rec2;
-        rules << *rul << *rul2;
-
-        delete rec;
-        delete rec2;
-        delete rul;
-        delete rul2;
-
-        classificationRecordsByRule(records, rules, &result);
-
-        qDebug() << result[0].getClassName();
-        for(int i = 0; i < result[0].resultRecordName.count(); i++)
-            qDebug() << result[0].resultRecordName[i];
-
-        qDebug() << "-------------------------------------------------------";
-
-        qDebug() << result[1].getClassName();
-        for(int i = 0; i < result[1].resultRecordName.count(); i++)
-            qDebug() << result[1].resultRecordName[i];*/
-
-
-        //-----------------------------------------------------------------------------------
-
-            /*distributesRecords(strRecords, &records);
-
-            QTextStream outStream(stdout);
-             outStream.setCodec(QTextCodec::codecForName("cp866"));
-
-             for(int i = 0; i < records.count(); i++)
-             {
-                outStream <<"Name: " << records[i].getName() << flush;
-                for(int j = 0; j < records[i].recordPropertes.count(); j++)
-                {
-                    outStream << "\n" << flush;
-                    outStream <<"Properties: " << records[i].recordPropertes[j] << flush << "\n" << "Value: ";
-                    for(int k = 0; k < records[i].recordIntegerValues[records[i].recordPropertes[j]].count(); k++)
-                        outStream << records[i].recordIntegerValues[records[i].recordPropertes[j]][k] << ", " << flush;
-                }
-                outStream << "\n\n" << flush;
-             }*/
-
-        //-----------------------------------------------------------------------------------
-
-            /*distributesClassificationRules(strRule, &rules);
-
-            QTextStream outStream(stdout);
-             outStream.setCodec(QTextCodec::codecForName("cp866"));
-
-             for(int i = 0; i < rules.count(); i++)
-             {
-                 outStream << "Class: " << rules[i].getName() << flush << "\n";
-                 outStream << "Constraint: " << rules[i].getConstraint() << flush << "\n";
-
-                 switch (rules[i].condition)
-                 {
-                 case propertyWithLength:
-                     outStream << "Value: " << rules[i].value << flush << "\n";
-                     break;
-
-                 case propertySingleValue:
-                     outStream << "Value: " << rules[i].arrIntegerValues.first() << flush << "\n";
-                     break;
-
-                 case propertyWithSeveralValues:
-                     outStream << "Value: " << flush;
-                     for(int j = 0; j < rules[i].arrIntegerValues.count(); j++)
-                        outStream << rules[i].arrIntegerValues[j] << ", " << flush;
-                     break;
-
-                 default:
-                     outStream << "ERROR" << flush << "\n";
-                     break;
-                 }
-                 outStream << "\n\n" << flush;
-             }*/
-
-    return a.exec();
+        return a.exec();
 }
