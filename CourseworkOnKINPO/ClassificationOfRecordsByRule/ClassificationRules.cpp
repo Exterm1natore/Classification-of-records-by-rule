@@ -2,8 +2,8 @@
 
 ClassificationRules::ClassificationRules()
 {
- name = "";
- constraint = "";
+    name = "";
+    constraint = "";
 }
 
 QString ClassificationRules::getName() const
@@ -18,7 +18,7 @@ QString ClassificationRules::getConstraint() const
 
 unsigned int ClassificationRules::getIntegerValues() const
 {
-   return this -> integerValues;
+    return this -> integerValues;
 }
 
 void ClassificationRules::setName(QString name)
@@ -35,13 +35,3 @@ void ClassificationRules::setIntegerValues(unsigned int integerValues)
 {
     this -> integerValues = integerValues;
 }
-
-/*void ClassificationRules::arrayIntegerValues(QList<int> *arrIntegerValues)
-{
-    arrIntegerValues->append(getIntegerValues());
-}
-
-void ClassificationRules::arrayRulesIntegerValues(const QList<int> arrIntegerValues, QMap<QString, QList<int> > *rulesIntegerValues)
-{
-    rulesIntegerValues->insert(getConstraint(), arrIntegerValues);
-}*/
