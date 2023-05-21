@@ -1,6 +1,5 @@
 #ifndef RECORDS_H
 #define RECORDS_H
-#include "QString"
 #include "QMap"
 
 class Records
@@ -13,17 +12,13 @@ public:
     QList<QString> recordPropertes;
     QList<int> arrIntegerValues;
 
-   //void propertysStatus(const QList<int> arrIntegerValues, QMap <QString, QList<int>> *recordIntegerValues);
-   //void arrayRecord( QList<QString> *recordPropertes);
-   //void arrayIntegerValues(QList<int> *arrIntegerValues);
+    QString getName() const;
+    QString getPropertes() const;
+    unsigned int getIntegerValues() const;
 
-   QString getName() const;
-   QString getPropertes() const;
-   unsigned int getIntegerValues() const;
-
-   void setName(QString name);
-   void setPropertes(QString propertes);
-   void setIntegerValues(unsigned int integerValues);
+    void setName(QString name);
+    void setPropertes(QString propertes);
+    void setIntegerValues(unsigned int integerValues);
 
 private:
     QString name = "";

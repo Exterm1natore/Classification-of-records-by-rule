@@ -2,8 +2,8 @@
 
 Records::Records()
 {
-   name = "";
-   propertes = "";
+    name = "";
+    propertes = "";
 }
 
 QString Records::getName() const
@@ -36,17 +36,3 @@ void Records::setIntegerValues(unsigned int integerValues)
     this -> integerValues = integerValues;
 }
 
-/*void Records::arrayIntegerValues(QList<int> *arrIntegerValues)
-{
-  arrIntegerValues->append(getIntegerValues());
-}
-
-void Records::arrayRecord(QList<QString> *recordPropertes)
-{
-  recordPropertes->append(getPropertes());
-}
-
-void Records::propertysStatus(const QList<int> arrIntegerValues, QMap<QString, QList<int> > *recordIntegerValues)
-{
-    recordIntegerValues->insert(getPropertes(), arrIntegerValues);
-}*/
