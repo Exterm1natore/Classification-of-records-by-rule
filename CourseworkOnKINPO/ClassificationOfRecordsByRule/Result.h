@@ -6,12 +6,10 @@
 class Result
 {
 public:
+
     Result();
     //QMap<QString, QList<QString>> result;
     QList<QString> resultRecordName;
-
-    //void arrRecordName(QList<QString> *resultRecordName);
-    //void arrResult(const QList<QString> resultRecordName, QMap<QString, QList<QString>> *result);
 
     QString getClassName() const;
     QString getRecordName() const;
