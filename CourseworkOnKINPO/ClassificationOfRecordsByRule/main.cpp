@@ -7,14 +7,75 @@
 #include <QStringList>
 #include <QTextCodec>
 #include <QRegularExpression>
+#include <QFile>
+
+QString buildStringFromResult (const QList<Result>& result)
+{
+    QString resultString;
+
+    for(int i = 0; i < result.count(); i++)
+    {
+        resultString.append("\"" + result[i].getClassName() + "\"" + ": ");
+
+        for(int j = 0; j < result[i].resultRecordName.count(); j++)
+        {
+            if(j < result[i].resultRecordName.count() - 1)
+                resultString.append(result[i].resultRecordName[j] + ", ");
+            else
+                resultString.append(result[i].resultRecordName[j]);
+        }
+        resultString.append("\n");
+    }
+
+    return resultString;
+}
+
+bool writeStringToFile(const QString& content, const QString& filePath)
+{
+    QFile file(filePath);
+
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
+    {
+        // В случае ошибки открытия файла, возвращаем false
+        return false;
+    }
+
+    QTextStream out(&file);
+
+    out.setCodec("UTF-8"); // Установка кодировки UTF-8
+
+    out << content;
+
+    file.close();
+
+    return true;
+}
+
+QString unpackTextFile(const QString& filePath)
+{
+    QFile file(filePath);
+
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        // В случае ошибки открытия файла, возвращаем пустую строку
+        return "Файл с входными данными не был найден! Возможно, файл не существует";
+    }
+
+    QTextStream in(&file);
+
+    in.setCodec("UTF-8"); // Установка кодировки UTF-8
+
+    QString content = in.readAll();
+
+    content.remove('\n'); //Удаление 'ENTER'
+
+    file.close();
+
+    return content;
+}
 
 QString checkClassificationRule(const QString& strRule)
 {
-    /*QString rule = "Запись принадлежит классу \"С покрытием\", если у нее есть свойство \"покрытие\";"
-                   "Запись принадлежит классу \"Объёмный\", если у нее есть свойство \"размер\", которое представлено двумя значениями;"
-                   "Запись принадлежит классу \"Синий\", если у нее есть свойство \"цвет\", в составе которого есть значение \"1\";"
-                   "Запись принадлежит классу \"Матовый\", если у нее есть свойство \"покрытие\" и значение этого свойства равно \"[44, 21]\".";*/
-
     // Паттерн для проверки первого типа строки
     QString pattern1 = "Запись принадлежит классу \"(.+)\", если у нее есть свойство \"(.+)\"";
     // Паттерн для проверки второго типа строки
@@ -30,13 +91,21 @@ QString checkClassificationRule(const QString& strRule)
     QRegularExpression regex3(pattern2);
     QRegularExpression regex4(pattern1);
 
+    if(strRule.count() < 10)
+        return "Ошибка! Количество правил не может быть меньше 1. Допустимый диапазон количества правил классификации: [1;100]";
+
     if (!strRule.endsWith("."))
-        return "Ошибка! Последнее правило должно заканчиваться на точку ('.')"; //Если заканчивается не на точку
+        return "Ошибка! В конце текста правил классификации должна стоять точка ('.')"; //Если заканчивается не на точку
 
     if (strRule.count(".") > 1)
         return "Ошибка! В тексте правил может быть только одна точка ('.') и должна находится после последнего правила"; //Если больше одной точки
 
-    QStringList strOneRule = strRule.split(";", QString::SkipEmptyParts);
+    const QStringList& strOneRule = strRule.split(";", QString::SkipEmptyParts);
+
+    if(strOneRule.count() > 100)
+        return "Ошибка! Количество записей не должно превышать 100. Допустимый диапазон: [1;100]";
+
+    QList<QString> numberRuleName; //Проверка на совпадения названия классов (135 - substings; )
 
     for(int i = 0; i < strOneRule.count(); i++)
     {
@@ -114,7 +183,7 @@ QString checkClassificationRule(const QString& strRule)
                             "\nОшибка в правиле: " + strOneRule[i]; //Название класса может содержать только буквы и пробел
 
             for(int j = 0; j < substrings[1].count(); j++)
-                if(!substrings[1][j].isLetter() || substrings[1][j].isSpace())
+                if(!substrings[1][j].isLetter() /*|| substrings[1][j].isSpace()*/)
                     return "Ошибка! Текстовое ограничение может содержать только буквы русского или английского алфавита и не должно содержать пробелы"
                             "\nВы ввели: " + substrings[1] +
                             "\nОшибка в правиле: " + strOneRule[i]; //Ограничение может содержать только буквы без пробелов
@@ -186,7 +255,7 @@ QString checkClassificationRule(const QString& strRule)
 
                  if(strOneRule[i][position] == "," && strOneRule[i][position + 1] == ",")
                      return "Ошибка! Неверный формат ввода правила с несколькими целочисленными ограничениями. "
-                            "\nНе допускается между символами '[' и ']' использование больше одной запятой (',')"
+                            "\nНе допускается между символами '[' и ']' использование больше одной запятой (',') подряд"
                             "\nОшибка в правиле: " + strOneRule[i]; //"Ошибка! Не допускается между символами '[' и ']' использование больше одной запятой (',')"
 
 
@@ -213,7 +282,7 @@ QString checkClassificationRule(const QString& strRule)
 
                  QString substring = strOneRule[i].mid(start + 1, end - start - 1); // вырезаем подстроку между скобками
                  QStringList values = substring.split(",", QString::SkipEmptyParts); // разделяем подстроку по запятой
-
+                 int numberValues = 0;
                  //--------------
 
                  for (const QString& value : values)
@@ -227,7 +296,10 @@ QString checkClassificationRule(const QString& strRule)
                                      "\nВы ввели: " + value.trimmed() +
                                     "\nОшибка в правиле: " + strOneRule[i]; //"Ошибка! Между символами '[' и ']' цифры должны лежать в диапазоне [1;99]"
 
+                     numberValues++;
                  }
+                 if(numberValues > 9)
+                     return "Ошибка! Количество целочисленных значений между символами '[' и ']' должно быть от 1 до 9";
              //-----------------------------------------------------------------------------------------------------------------------------------------
             }
             else if (regex2.match(strOneRule[i]).hasMatch())
@@ -269,8 +341,8 @@ QString checkClassificationRule(const QString& strRule)
                            "\nПравило должно заканичиваться на 'м' или 'и', в зависимости от указанного значения (одним) или (двумя - девятью)"
                             "\nОшибка в правиле: " + strOneRule[i]; //Не соответствует шаблону
 
-                if(strOneRule[i].count(".") == 1 && (strOneRule[i][strOneRule[i].lastIndexOf("и") + 1] != "."
-                                                     || strOneRule[i][strOneRule[i].lastIndexOf("м") + 1] != "."))
+                if(strOneRule[i].count(".") == 1 && strOneRule[i][strOneRule[i].lastIndexOf("и") + 1] != "."
+                                                     && strOneRule[i][strOneRule[i].lastIndexOf("м") + 1] != ".")
                     return "Ошибка! Неверный формат ввода правила с допустимым количеством целочисленных значений записи"
                            "\nПравило должно заканичиваться на 'м.' или 'и.', в зависимости от указанного значения (одним) или (двумя - девятью)"
                             "\nОшибка в правиле: " + strOneRule[i]; //Не соответсвует шаблону
@@ -355,6 +427,14 @@ QString checkClassificationRule(const QString& strRule)
                            "\nПравило должно заканчиваться на символ ' \". '"
                             "\nОшибка в правиле: " + strOneRule[i]; //Ошибка в написании (Больше чем шаблон)
             }
+
+
+
+            //-------------------------------Заполнение QList названием правил (QList перед первым циклом for)---------------------------
+              numberRuleName.append(substrings[0]);
+            //-----------------------------------------------------------------------------------------------------------------------------
+
+
         }
         else
             return "Ошибка! Неверный формат ввода правила"
@@ -367,14 +447,53 @@ QString checkClassificationRule(const QString& strRule)
                     // Не подошло ни по одному из шаблонов true только если проходит все проверки одного из шаблонов
     }
 
+    //-------------------------------Проверка чтобы названия правил не совпадали---------------------------------------------------
+    for (int i = 0; i < numberRuleName.count(); ++i)
+        {
+            const QString& currentString = numberRuleName[i];
+            for (int j = i + 1; j < numberRuleName.count(); ++j)
+            {
+                const QString& otherString = numberRuleName[j];
+                if (currentString == otherString)
+                {
+                    return "Ошибка! Названия классов не могут повторяться"
+                            "\nНазвание класса: \"" + currentString + "\""; // Найдено повторяющиеся строки
+                }
+            }
+        }
+    //-----------------------------------------------------------------------------------------------------------------------------
+
+
+    //---------------------------------Проверка чтобы не было одинаковых правил---29-------------------------------------------------------
+    for(int i = 0; i < strOneRule.count(); ++i)
+    {
+           QString currentString = strOneRule[i].mid(strOneRule[i].indexOf("\"", 29) + 1);
+           currentString.remove(" ");
+        if(currentString.count(".") != 0)
+          currentString.remove(".");
+
+        for(int j = i + 1; j < strOneRule.count(); ++j)
+        {
+            QString otherString = strOneRule[j].mid(strOneRule[j].indexOf("\"", 29) + 1);
+            otherString.remove(" ");
+            if(otherString.count(".") != 0)
+                otherString.remove(".");
+
+            if (currentString == otherString)
+                return "Ошибка! Условия классификации не могут повторяться"
+                        "\nУсловие классификации: \"" + strOneRule[i].mid(strOneRule[i].indexOf("\"", 29) + 3) + "\""; // Найдено повторяющиеся строки
+        }
+    }
+    //----------------------------------------------------------------------------------------------------------------------------------------------
+
     return "Всё хорошо!";
 
 }
 
 QString checkRecords (const QString& strRecords)
 {
-
-    //QString strRecords = "Шкаф: цвет=[1,2], размер=[10,12,15];Стол:размер=[12, 15],цвет=[1,2,3],покрытие=[12].";
+    if (strRecords.count() < 10)
+        return "Ошибка! Количество записей не может быть меньше 1. Допустимый диапазон: [1;100]";
 
     // Проверка окончания строки на точку
     if (!strRecords.endsWith("."))
@@ -383,15 +502,12 @@ QString checkRecords (const QString& strRecords)
     if (strRecords.count(".") > 1)
         return "Ошибка! Точка ('.') может стоять только после последней записи";
 
-    if (strRecords.count() < 10)
-        return "Ошибка! Количество записей не может быть меньше 1. Допустимый диапазон: [1;100]";
-
     //Проверка на равенство ":" и ;"
     if(strRecords.count(":") != (strRecords.count(";") + 1))
         return "Ошибка! Количество названий записи должно быть равно количеству записей (название записи находится перед символом ':',"
                "а каждая запись разделена символом ';')";
 
-    QStringList strOneRecord = strRecords.split(";", QString::SkipEmptyParts);
+    const QStringList& strOneRecord = strRecords.split(";", QString::SkipEmptyParts);
 
     if(strOneRecord.count() > 100)
         return "Ошибка! Количество записей не может быть больше 100. Допустимый диапазон: [1;100]";
@@ -428,13 +544,23 @@ QString checkRecords (const QString& strRecords)
                 return "Ошибка! В названии записи допускаются лишь буквы русского или английсского алфавита"
                        "\nВы ввели: \"" + strOneRecord[i].mid(0, strOneRecord[i].indexOf(":"))
                         + "\"\nОшибка в записи: " + strOneRecord[i]; //ошибка в названии записи
+
+            if(!strOneRecord[i][0].isUpper())
+                return "Ошибка! Название записи должно начинаться с заглавной буквы"
+                        "\nВы ввели: \"" + strOneRecord[i].mid(0, strOneRecord[i].indexOf(":"))
+                         + "\"\nОшибка в записи: " + strOneRecord[i];           //Название записи не с заглавной буквы
+
+
+            if(j > 0 && !strOneRecord[i][j].isLower())
+                return "Ошибка! В названии записи все буквы, кроме первой должны быть в нижнем регистре"
+                       "\nВы ввели: \"" + strOneRecord[i].mid(0, strOneRecord[i].indexOf(":"))
+                        + "\"\nОшибка в записи: " + strOneRecord[i];       //Все буквы названия записи кроме первой должны быть в нижнем регистре
+
             lineLength++;
         }
         if (lineLength < 3 || lineLength > 20)
             return "Ошибка! Название записи не может быть меньше трёх или больше двадцати символов"
                    "\nОшибка в записи: " + strOneRecord[i]; //Дляна названия записи
-
-        lineLength = 0;
 
 
 
@@ -449,11 +575,12 @@ QString checkRecords (const QString& strRecords)
             // Проверка наличия символа "," после каждого символа "]"
             for (int j = 0; j < lastIndex; j++)
             {
-                if (strOneRecord[i][j] == ']' && (i + 1 >= strOneRecord[i].length() || strOneRecord[i][j + 1] != ','))
+                //if (strOneRecord[i][j] == ']' && (j + 1 >= strOneRecord[i].length() || strOneRecord[i][j + 1] != ','))
+                if(strOneRecord[i][j] == "]" && strOneRecord[i][j + 1] != ',')
                 {
                     //isValid = false;
                     //break;
-                    return "Ошибка! После каждого символа ']' должна стоять запятая (',')"
+                    return "Ошибка! После каждого символа ']', кроме последнего, должна стоять запятая (',')"
                            "\nОшибка в записи: " + strOneRecord[i];
                 }
             }
@@ -461,14 +588,14 @@ QString checkRecords (const QString& strRecords)
             // Проверка отсутствия символа "," после последнего символа "]"
             if (lastIndex + 1 < strOneRecord[i].length() && strOneRecord[i][lastIndex + 1] == ',')
                 //isValid = false;
-                return "Ошибка! После последнего символа ']' может стоять только точка с запятой (';') или точка ('.')"
+                return "Ошибка! После последнего символа ']' может стоять только точка с запятой (';'). Или точка ('.'), если запись последняя"
                        "\nОшибка в записи: " + strOneRecord[i];
         }
         else
 
             // Если найден символ "," после последнего символа "]", устанавливаем isValid в false
             //isValid = false;
-            return "Ошибка! После последнего символа ']' может стоять только точка с запятой (';') или точка ('.')"
+            return "Ошибка! После последнего символа ']' может стоять только точка с запятой (';'). Или точка ('.'), если запись последняя"
                    "\nОшибка в записи: " + strOneRecord[i];
 
         if (!isValid)
@@ -516,6 +643,9 @@ QString checkRecords (const QString& strRecords)
         //--------------------------Проверка на названия свойств (между : и = или , и =)--------------
 
         QStringList entries = strOneRecord[i].split(QRegExp("[:,]")); // Разбиваем строку по символам ":" и ","
+
+        QList<QString> listProperties;//Проверка совпадения свойств записи
+
         foreach (const QString& entry, entries)
         {
             QString trimmedEntry = entry.trimmed();
@@ -525,7 +655,7 @@ QString checkRecords (const QString& strRecords)
             {
                 QString substring = trimmedEntry.mid(0, equalsIndex).trimmed();
                 if(substring.count() < 3 || substring.count() > 20)
-                    return "Ошибка! Название свойства записи не может быть меньше трёх или больше двадцати"
+                    return "Ошибка! Название свойства записи не может быть меньше трёх или больше двадцати символов"
                            "\nВы ввели: \"" + substring +
                             "\"\nОшибка в записи: " + strOneRecord[i]; //длина названия свойства меньше 3 или больше 20
 
@@ -541,8 +671,27 @@ QString checkRecords (const QString& strRecords)
                                "\nВы ввели: \"" + substring +
                                 "\"\nОшибка в записи: " + strOneRecord[i];
                 }
+
+                listProperties.append(substring); //Проверка совпадения свойств записи
             }
         }
+
+        //----------------------------------Проверка на то чтобы не было одинаковых названий свойств записи-------------------
+        for (int i = 0; i < listProperties.size(); ++i)
+            {
+                const QString& currentString = listProperties.at(i);
+                for (int j = i + 1; j < listProperties.size(); ++j)
+                {
+                    const QString& otherString = listProperties.at(j);
+                    if (currentString == otherString)
+                    {
+                        return "Ошибка! В одной записи названия свойств не могут повторяться"
+                               "\nНазвание свойства: \"" + currentString +
+                                "\"\nОшибка в записи: " + strOneRecord[i];; // Найдено повторяющиеся строки
+                    }
+                }
+            }
+        //--------------------------------------------------------------------------------------------------------------------
 
         //----------------------------------Проверка на то что в [] могут быть только определённые символы и определённое число пробелолв
         //----------------------------------и запятых и не может быть побел и запятая подряд--------------------------------------------
@@ -606,7 +755,7 @@ QString checkRecords (const QString& strRecords)
         {
             QString substring = strOneRecord[i].mid(start + 1, end - start - 1); // вырезаем подстроку между скобками
             QStringList values = substring.split(",", QString::SkipEmptyParts); // разделяем подстроку по запятой
-
+            int numberValues = 0;
             //--------------
 
             for (const QString& value : values)
@@ -618,8 +767,11 @@ QString checkRecords (const QString& strRecords)
                         return "Ошибка! Между символами '[' и ']' цифры должны лежать в диапазоне [1;99]"
                                "\nВы ввели: \"" + value.trimmed() +
                                 "\"\nОшибка в записи: " + strOneRecord[i];
+                numberValues++;
             }
 
+            if(numberValues > 9)
+                return "Ошибка! Количество целочисленных значений между символами '[' и ']' должно быть от 1 до 9";
             start = strOneRecord[i].indexOf('[', end); // ищем следующий символ "["
             end = strOneRecord[i].indexOf(']', end + 1); // ищем следующий символ "]"
         }
@@ -657,11 +809,13 @@ QString checkRecords (const QString& strRecords)
             }
         }
 
-        if(strOneRecord[i].lastIndexOf("]") < (strOneRecord[i].count() - 1) &&
-                (strOneRecord[i][strOneRecord[i].lastIndexOf("]") + 1].isSpace() || strOneRecord[i][strOneRecord[i].lastIndexOf("]") + 1] == ","))
-            return "Ошибка! после последнего свойства не может стоять 'пробел' или запятая (',')"
+        if(strOneRecord[i].lastIndexOf("]") != strOneRecord[i].count() - 1 && strOneRecord[i].count(".") == 0)
+            return "Ошибка! После последнего свойства записи не должно быть никаких символов, кроме ';', которая разделяет записи"
                    "\nОшибка в записи: " + strOneRecord[i];
 
+        if(strOneRecord[i].lastIndexOf("]") != strOneRecord[i].count() - 2 && strOneRecord[i].count(".") == 1)
+            return "Ошибка! После последнего свойства записи не должно быть никаких символов, кроме '.' после последней записи"
+                   "\nОшибка в записи: " + strOneRecord[i];
 
         //Проверка на то чтобы формат свойст был верный
         QRegularExpression rex(",(?![^\\[]*\\])");
@@ -672,13 +826,32 @@ QString checkRecords (const QString& strRecords)
         for (int j = 0; j < parts.count(); j++)
             if(parts[j].count("=") == 0)
                 return "Ошибка! Свойство введено неверно. Вы ввели: \"" + parts[j] + "\"\nВерный формат: 'название свойства'=['целочисленные занчения']";
+
+        //Проверка на то, что после последнего символа ] должна стоять ; или .
+        //if(strOneRecord[i].lastIndexOf("]") != strOneRecord[i].count() - 1)
     }
 
+    //---------------------------------Проверка чтобы не было одинаковых названий записей----------------------------------------------------------
+    for (int i = 0; i < strOneRecord.count(); ++i)
+        {
+            const QString& currentString = strOneRecord[i].mid(0, strOneRecord[i].indexOf(":"));
+            for (int j = i + 1; j < strOneRecord.count(); ++j)
+            {
+                const QString& otherString = strOneRecord[j].mid(0, strOneRecord[j].indexOf(":"));
+                if (currentString == otherString)
+                {
+                    return "Ошибка! Названия записей не могут повторяться"
+                            "\nНазвание записи: \"" + currentString + "\""; // Найдено повторяющиеся строки
+                }
+            }
+        }
+
+    //----------------------------------------------------------------------------------------------------------------------------------------------
     return "Всё хорошо!";
 }
 
 
-void distributesClassificationRules(const QString& rulesData, QList<ClassificationRules>* classificationRules)
+void splitStringOfClassificationRules(const QString& rulesData, QList<ClassificationRules>* classificationRules)
 {
     QStringList substringsRules = rulesData.split(";");
 
@@ -772,7 +945,7 @@ void distributesClassificationRules(const QString& rulesData, QList<Classificati
     }
 }
 
-void distributesRecords(const QString& recordsData, QList<Records>* record)
+void splitStringOfRecords(const QString& recordsData, QList<Records>* record)
 {
     QStringList substringsRecords = recordsData.split(";");
 
@@ -864,7 +1037,6 @@ void classificationRecordsByRule (const QList<Records>& records, const QList<Cla
                             newResult->setRecordName(record.getName());
                         break;
 
-
                     case propertyWithSeveralValues:
                         //Стоит уточнить на счёт порядка для нескольких значений. Подходит или нет
                         for(int z = 0; z < rule.arrIntegerValues.count() && flag == false; z++)
@@ -896,51 +1068,124 @@ void classificationRecordsByRule (const QList<Records>& records, const QList<Cla
 
 int main(int argc, char *argv[])
 {
+    //"Шкаф: цвет=[1, 2], размер=[10,12,15];Стол: размер=[12, 15], цвет=[1, 15], покрытие=[12].";
+
+    /*"Запись принадлежит классу \"С покрытием\", если у нее есть свойство \"покрытие\";"
+      "Запись принадлежит классу \"Объёмный\", если у нее есть свойство \"размер\", которое представлено двумя значениями;"
+      "Запись принадлежит классу \"Синий\", если у нее есть свойство \"цвет\", в составе которого есть значение \"1\";"
+      "Запись принадлежит классу \"Матовый\", если у нее есть свойство \"покрытие\" и значение этого свойства равно \"[44, 21]\".";*/
+
     QCoreApplication a(argc, argv);
 
-        QTextStream outStream(stdout);
-        outStream.setCodec(QTextCodec::codecForName("cp866"));
+    QTextStream outStream(stdout);
+    QTextStream inStream(stdin);
 
-        QList<Records> records;
-        QList<ClassificationRules> rules;
-        QList<Result> result;
+    outStream.setCodec(QTextCodec::codecForName("cp866"));
 
-        QString strRecords = "Шкаф: цвет=[1, 2], размер=[10,12,15];Стол: размер=[12, 15], цвет=[1, 15], покрытие=[12].";
+    QList<Records> records;
+    QList<ClassificationRules> rules;
+    QList<Result> result;
 
-        QString strRule = "Запись принадлежит классу \"С покрытием\", если у нее есть свойство \"покрытие\";"
-                          "Запись принадлежит классу \"Объёмный\", если у нее есть свойство \"размер\", которое представлено двумя значениями;"
-                          "Запись принадлежит классу \"Синий\", если у нее есть свойство \"цвет\", в составе которого есть значение \"1\";"
-                          "Запись принадлежит классу \"Матовый\", если у нее есть свойство \"покрытие\" и значение этого свойства равно \"[44, 21]\".";
 
-        QString errRecord = checkRecords(strRecords);
-        QString errRule = checkClassificationRule(strRule);
+    QString recordFileName = "C:\\Qt\\record.txt";
+    QString ruleFileName = "C:\\Qt\\rule.txt";
+    QString resultFileName = "C:\\Qt\\result.txt";
 
-        if(!errRule.contains("Ошибка!") && !errRecord.contains("Ошибка!"))
+    QString strRecords = unpackTextFile(recordFileName);
+    if(strRecords == "Файл с входными данными не был найден! Возможно, файл не существует")
+    {
+        strRecords = "Файл с входными данными записей не был найден! Возможно, файл не существует";
+        outStream << strRecords + "\nВведённый путь: " + recordFileName << flush;
+        return 0;
+    }
+
+    QString strRule = unpackTextFile(ruleFileName);
+    if(strRule == "Файл с входными данными не был найден! Возможно, файл не существует")
+    {
+        strRule = "Файл с входными данными правил классификации не был найден! Возможно, файл не существует";
+        outStream << strRule + "\nВведённый путь: " + ruleFileName << flush;
+        return 0;
+    }
+
+    if(strRecords.count() == 0 || strRecords.count(" ") == strRecords.count())
+    {
+        QString recordsIsEmpty = "Файл с входными данными записей является пустым!";
+        outStream << recordsIsEmpty << flush;
+        return 0;
+    }
+
+    if(strRecords.count() == 0 || strRule.count(" ") == strRule.count())
+    {
+        QString ruleIsEmpty = "Файл с входными данными правил классификации является пустым!";
+        outStream << ruleIsEmpty << flush;
+        return 0;
+    }
+
+    QString errRecord = checkRecords(strRecords);
+    QString errRule = checkClassificationRule(strRule);
+
+    //QString resultFinish; //Преобразование в выходное значние
+    QString resultString;
+
+    if(errRule.contains("Всё хорошо!") && errRecord.contains("Всё хорошо!"))
+    {
+    splitStringOfRecords(strRecords, &records);
+    splitStringOfClassificationRules(strRule, &rules);
+    classificationRecordsByRule(records, rules, &result);
+
+    resultString = buildStringFromResult(result);
+
+
+    for(int i = 0; i < result.count(); i++)
+    {
+        outStream << result[i].getClassName() << ": " << flush;
+        //resultFinish.append(result[i].getClassName() + ": ");
+
+        for(int j = 0; j < result[i].resultRecordName.count(); j++)
         {
-        distributesRecords(strRecords, &records);
-        distributesClassificationRules(strRule, &rules);
-        classificationRecordsByRule(records, rules, &result);
-
-
-        for(int i = 0; i < result.count(); i++)
+            outStream << result[i].resultRecordName[j] << ", " << flush;
+            //resultFinish.append(result[i].resultRecordName[j] + ", ");
+        }
+        outStream << "\n\n" << flush;
+        //resultFinish.append("\n\n");
+    }
+    }
+    else
+    {
+        if(errRule.contains("Ошибка!") && errRecord.contains("Ошибка!"))
         {
-            outStream << result[i].getClassName() << ": " << flush;
-            for(int j = 0; j < result[i].resultRecordName.count(); j++)
-                outStream << result[i].resultRecordName[j] << ", " << flush;
-            outStream << "\n\n" << flush;
+         outStream << errRecord << "\n\n" << errRule << flush;
+         //resultFinish.append(errRecord + "\n\n" + errRule);
+         resultString.append(errRecord + "\n\n" + errRule);
         }
-        }
-        else
+
+        else if(errRule.contains("Ошибка!") && !errRecord.contains("Ошибка!"))
         {
-            if(errRule.contains("Ошибка!") && errRecord.contains("Ошибка!"))
-             outStream << errRecord << "\n\n" << errRule << flush;
-
-            else if(errRule.contains("Ошибка!") && !errRecord.contains("Ошибка!"))
-                outStream << errRule << flush;
-
-            else if(!errRule.contains("Ошибка!") && errRecord.contains("Ошибка!"))
-                outStream << errRecord << flush;
+            outStream << errRule << flush;
+            //resultFinish.append(errRule);
+            resultString.append(errRule);
         }
 
-        return a.exec();
+        else if(!errRule.contains("Ошибка!") && errRecord.contains("Ошибка!"))
+        {
+            outStream << errRecord << flush;
+            //resultFinish.append(errRecord);
+            resultString.append(errRecord);
+        }
+    }
+
+    bool success = writeStringToFile(resultString, resultFileName);
+
+    if (success)
+    {
+        QString resultText = "\nЗапись в выходной файл произведена корректно";
+       outStream << resultText << flush;
+    }
+    else
+    {
+        QString resultText = "\nФайл для выходных данных указан неверно! Возможно, указанного расположения не существует";
+        outStream << resultText + "\nВведённый путь: " + resultFileName << flush;
+    }
+
+    return a.exec();
 }
