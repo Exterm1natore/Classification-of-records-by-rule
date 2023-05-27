@@ -1,6 +1,8 @@
 #ifndef CLASSIFICATIONRULES_H
 #define CLASSIFICATIONRULES_H
 #include "QMap"
+#include <QRegularExpression>
+#include <QStringList>
 
 enum LimitationIntegerValues
 {
@@ -26,23 +28,19 @@ class ClassificationRules
 {
 public:
     ClassificationRules();
-
-    LimitationIntegerValues value;
-    ConditionType condition;
-    QList<int> arrIntegerValues;
-
-    QString getName() const;
-    QString getConstraint() const;
-    unsigned int getIntegerValues() const;
-
-    void setName(QString name);
-    void setConstraint(QString constraint);
-    void setIntegerValues(unsigned int integerValues);
-
+    QString checkClassificationRule(const QString& strRule);
+    void splitStringOfClassificationRules(const QString& rulesData, QList<ClassificationRules>* classificationRules);
+    ConditionType getCondition();
+    LimitationIntegerValues getLimitValue();
+    QString getName();
+    QString getConstraint();
+    QList<int> getIntegerValues();
 private:
+    ConditionType condition;
+    LimitationIntegerValues limitValue;
     QString name;
     QString constraint;
-    unsigned int integerValues;
+    QList<int> integerValues;
 };
 
 #endif // CLASSIFICATIONRULES_H

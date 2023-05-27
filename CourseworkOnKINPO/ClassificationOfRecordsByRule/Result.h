@@ -1,26 +1,21 @@
 #ifndef RESULT_H
 #define RESULT_H
-#include "QString"
-#include "QMap"
+#include "ClassificationRules.h"
+#include "Records.h"
+#include "QList"
+#include <QTextCodec>
 
 class Result
 {
 public:
-
     Result();
-    //QMap<QString, QList<QString>> result;
-    QList<QString> resultRecordName;
-
-    QString getClassName() const;
-    QString getRecordName() const;
-
-    void setClassName(QString className);
-    void setRecordName(QString recordName); /*Записывать
-в .cpp файле по типу: если значение пусто, то записать, если занято то перейти к следующему эементу массива*/
-
+    void classificationRecordsByRule (const QList<Records>& records, const QList<ClassificationRules>& classificationRules, QList<Result>* result);
+    QString buildStringFromResult (const QList<Result>& result);
+    QString getClassName();
+    QList<QString> getRecordNames();
 private:
-    QString className = "";
-    QString recordName = "";
+    QString className;
+    QList<QString> recordNames;
 };
 
 #endif // RESULT_H

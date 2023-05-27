@@ -1,29 +1,22 @@
 #ifndef RECORDS_H
 #define RECORDS_H
 #include "QMap"
+#include <QRegularExpression>
+#include <QStringList>
 
 class Records
 {
 public:
     Records();
-    QMap <QString, QList<int>> recordIntegerValues;
-
-    /*Может стоит убрать в private и сделать заполнение через метод*/
-    QList<QString> recordPropertes;
-    QList<int> arrIntegerValues;
-
-    QString getName() const;
-    QString getPropertes() const;
-    unsigned int getIntegerValues() const;
-
-    void setName(QString name);
-    void setPropertes(QString propertes);
-    void setIntegerValues(unsigned int integerValues);
-
+    QString checkRecords (const QString& strRecords);
+    void splitStringOfRecords(const QString& recordsData, QList<Records>* record);
+    QMap<QString, QList<int>> getRelatedIntegerValues();
+    QString getPropertes();
+    QString getName();
 private:
-    QString name = "";
-    QString propertes = "";
-    unsigned int integerValues;
+    QMap <QString, QList<int>> relatedIntegerValues;
+    QString propertes;
+    QString name;
 };
 
 #endif // RECORDS_H

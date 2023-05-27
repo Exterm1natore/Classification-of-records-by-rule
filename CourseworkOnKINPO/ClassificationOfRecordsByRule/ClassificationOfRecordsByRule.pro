@@ -16,6 +16,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
         ClassificationRules.cpp \
+        FileHandling.cpp \
         Records.cpp \
         Result.cpp \
         main.cpp
@@ -27,5 +28,6 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 HEADERS += \
     ClassificationRules.h \
+    FileHandling.h \
     Records.h \
     Result.h
