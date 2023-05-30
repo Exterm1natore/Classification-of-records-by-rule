@@ -9,9 +9,20 @@ QString Result::classificationRecordsByRule (const QString& textRecords, const Q
 {
     ClassificationRules newRule;
     Records newRecords;
+    QString errRule = newRule.splitStringOfClassificationRules(textClassificationRules, &rules);
+    QString errRecord = newRecords.splitStringOfRecords(textRecords, &records);
+    QString errData;
 
-    newRule.splitStringOfClassificationRules(textClassificationRules, &rules);
-    newRecords.splitStringOfRecords(textRecords, &records);
+    if(!errRule.contains("Всё хорошо!") && !errRecord.contains("Всё хорошо!"))
+        return errRule + "\n\n" + errRecord;
+
+    else if(!errRule.contains("Всё хорошо!") && errRecord.contains("Всё хорошо!"))
+        return errRule;
+
+    else if(errRule.contains("Всё хорошо!") && !errRecord.contains("Всё хорошо!"))
+        return errRecord;
+    else
+    {
 
     for(int i = 0; i < rules.count(); i++)
     {
@@ -62,6 +73,7 @@ QString Result::classificationRecordsByRule (const QString& textRecords, const Q
         result.append(newResult);
     }
     return buildStringFromResult(result);
+    }
 }
 
 QString Result::buildStringFromResult (const QList<Result>& result)

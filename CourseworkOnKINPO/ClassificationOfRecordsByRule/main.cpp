@@ -51,45 +51,17 @@ int main(int argc, char *argv[])
            return 0;
        }
 
-       if(strRecords.count() == 0 || strRule.count(" ") == strRule.count())
+       if(strRule.count() == 0 || strRule.count(" ") == strRule.count())
        {
            QString ruleIsEmpty = "Файл с входными данными правил классификации является пустым!";
            outStream << ruleIsEmpty << flush;
            return 0;
        }
 
-       //----------------Проверка на текст записей и правил----------------------------------
-       QString errRecord = textRecord.checkRecords(strRecords);
-       QString errRule = textRule.checkClassificationRule(strRule);
-       //------------------------------------------------------------------------------------
-
        QString resultString;
 
-       if(errRule.contains("Всё хорошо!") && errRecord.contains("Всё хорошо!"))
-       {
-           resultString = textResult.classificationRecordsByRule(strRecords, strRule);
-           outStream << resultString << flush;
-       }
-       else
-       {
-           if(errRule.contains("Ошибка!") && errRecord.contains("Ошибка!"))
-           {
-               outStream << errRecord << "\n\n" << errRule << flush;
-               resultString.append(errRecord + "\n\n" + errRule);
-           }
-
-           else if(errRule.contains("Ошибка!") && !errRecord.contains("Ошибка!"))
-           {
-               outStream << errRule << flush;
-               resultString.append(errRule);
-           }
-
-           else if(!errRule.contains("Ошибка!") && errRecord.contains("Ошибка!"))
-           {
-               outStream << errRecord << flush;
-               resultString.append(errRecord);
-           }
-       }
+       resultString = textResult.classificationRecordsByRule(strRecords, strRule);
+       outStream << resultString << flush;
 
        bool success = textFiles.writeStringToFile(resultString, resultFileName);
 

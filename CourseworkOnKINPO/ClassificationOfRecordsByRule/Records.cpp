@@ -369,8 +369,15 @@ QString Records::checkRecords (const QString& strRecords)
 
 
 
-void Records::splitStringOfRecords(const QString& recordsData, QList<Records>* record)
+QString Records::splitStringOfRecords(const QString& recordsData, QList<Records>* record)
 {
+    Records checkRecords;
+    QString errRecord = checkRecords.checkRecords(recordsData);
+
+    if(!errRecord.contains("Всё хорошо!"))
+        return errRecord;
+    else
+    {
     QStringList substringsRecords = recordsData.split(";");
 
     for(int i = 0; i < substringsRecords.count(); i++)
@@ -412,6 +419,8 @@ void Records::splitStringOfRecords(const QString& recordsData, QList<Records>* r
             newRecord.relatedIntegerValues.insert(propertes, integerValues);
         }
         record->append(newRecord);
+    }
+    return errRecord;
     }
 }
 

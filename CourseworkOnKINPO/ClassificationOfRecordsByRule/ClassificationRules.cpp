@@ -6,7 +6,7 @@ ClassificationRules::ClassificationRules()
     constraint = "";
 }
 
-QString ClassificationRules::checkClassificationRule(const QString& strRule)
+QString ClassificationRules::checkClassificationRules(const QString& strRule)
 {
     // Паттерн для проверки первого типа строки
     QString pattern1 = "Запись принадлежит классу \"(.+)\", если у нее есть свойство \"(.+)\"";
@@ -422,8 +422,16 @@ QString ClassificationRules::checkClassificationRule(const QString& strRule)
 
 }
 
-void ClassificationRules::splitStringOfClassificationRules(const QString& rulesData, QList<ClassificationRules>* classificationRules)
+QString ClassificationRules::splitStringOfClassificationRules(const QString& rulesData, QList<ClassificationRules>* classificationRules)
 {
+
+    ClassificationRules checkRules;
+    QString errRule = checkRules.checkClassificationRules(rulesData);
+
+    if(!errRule.contains("Всё хорошо!"))
+            return errRule;
+    else
+    {
     QStringList substringsRules = rulesData.split(";");
 
     for(int i = 0; i < substringsRules.count(); i++)
@@ -512,6 +520,8 @@ void ClassificationRules::splitStringOfClassificationRules(const QString& rulesD
         }
         classificationRules->append(newRule);
         //delete newRule;
+    }
+    return errRule;
     }
 }
 
