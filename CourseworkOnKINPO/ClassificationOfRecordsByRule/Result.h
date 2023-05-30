@@ -9,11 +9,14 @@ class Result
 {
 public:
     Result();
-    void classificationRecordsByRule (const QList<Records>& records, const QList<ClassificationRules>& classificationRules, QList<Result>* result);
+    QString classificationRecordsByRule (const QString& textRecords, const QString& textClassificationRules);
     QString buildStringFromResult (const QList<Result>& result);
     QString getClassName();
     QList<QString> getRecordNames();
 private:
+    QList<Result> result;
+    QList<Records> records;
+    QList<ClassificationRules> rules;
     QString className;
     QList<QString> recordNames;
 };

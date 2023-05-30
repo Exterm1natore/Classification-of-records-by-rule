@@ -5,11 +5,17 @@ Result::Result()
     className = "";
 }
 
-void Result::classificationRecordsByRule (const QList<Records>& records, const QList<ClassificationRules>& classificationRules, QList<Result>* result)
+QString Result::classificationRecordsByRule (const QString& textRecords, const QString& textClassificationRules)
 {
-    for(int i = 0; i < classificationRules.count(); i++)
+    ClassificationRules newRule;
+    Records newRecords;
+
+    newRule.splitStringOfClassificationRules(textClassificationRules, &rules);
+    newRecords.splitStringOfRecords(textRecords, &records);
+
+    for(int i = 0; i < rules.count(); i++)
     {
-        ClassificationRules rule = classificationRules[i];
+        ClassificationRules rule = rules[i];
         Result newResult;
 
         newResult.className = rule.getName();
@@ -17,8 +23,6 @@ void Result::classificationRecordsByRule (const QList<Records>& records, const Q
         for(int j = 0; j < records.count(); j++)
         {
             Records record = records[j];
-            /*for(int k = 0; k < record.getRelatedIntegerValues().count(); k++)
-            {*/
                 if(record.getRelatedIntegerValues().contains(rule.getConstraint()))
                 {
                     bool flag = false;
@@ -50,22 +54,14 @@ void Result::classificationRecordsByRule (const QList<Records>& records, const Q
                         break;
                     }
                 }
-            //}
-            /*ПОД ОВПРОСОМ*/
-            /*if(newResult->getRecordName() != "")
-            {
-                newResult->resultRecordName.append(newResult->getRecordName());
-                newResult->setRecordName("");
-            }*/
-
         }
         /*ПОД ВОПРОСОМ*/
         if(newResult.recordNames.count() == 0)
             newResult.recordNames.append("-");
 
-        result->append(newResult); //Исправить, будет добавлять в следующий элемент такое же название класса что и было в предыдущем! лучше сделать QMap
-        //delete newResult;
+        result.append(newResult);
     }
+    return buildStringFromResult(result);
 }
 
 QString Result::buildStringFromResult (const QList<Result>& result)
