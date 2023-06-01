@@ -23,8 +23,8 @@ QString ClassificationRules::checkClassificationRules(const QString& strRule)
     QRegularExpression regex3(pattern2);
     QRegularExpression regex4(pattern1);
 
-    if(strRule.count() < 10)
-        return "Ошибка! Количество правил не может быть меньше 1. Допустимый диапазон количества правил классификации: [1;100]";
+    /*if(strRule.count() < 10)
+            return "Ошибка! Количество правил не может быть меньше 1. Допустимый диапазон количества правил классификации: [1;100]";*/
 
     if (!strRule.endsWith("."))
         return "Ошибка! В конце текста правил классификации должна стоять точка ('.')"; //Если заканчивается не на точку
@@ -429,99 +429,99 @@ QString ClassificationRules::splitStringOfClassificationRules(const QString& rul
     QString errRule = checkRules.checkClassificationRules(rulesData);
 
     if(!errRule.contains("Всё хорошо!"))
-            return errRule;
+        return errRule;
     else
     {
-    QStringList substringsRules = rulesData.split(";");
+        QStringList substringsRules = rulesData.split(";");
 
-    for(int i = 0; i < substringsRules.count(); i++)
-    {
-        ClassificationRules newRule;
-        //ClassificationRules *newRule = new ClassificationRules;
-
-        QRegExp classRx("\"([^\"]+)\""); // находим слова внутри кавычек \" \"
-        QRegExp propertyRx("свойство \"([^\"]+)\""); // находим слова после слова "свойство \"" и до закрывающей кавычки
-
-        int classPos = classRx.indexIn(substringsRules[i]);
-        if (classPos != -1)
-            newRule.name = classRx.cap(1);
-
-        int propertyPos = propertyRx.indexIn(substringsRules[i]);
-        if (propertyPos != -1)
-            newRule.constraint = propertyRx.cap(1);
-
-
-        QString withLength = "которое представлено";
-        QString singleValue = "в составе которого есть значение";
-        QString severalValues = "и значение этого свойства равно";
-
-        if(substringsRules[i].contains(withLength))
+        for(int i = 0; i < substringsRules.count(); i++)
         {
-            newRule.condition = propertyWithLength;
+            ClassificationRules newRule;
+            //ClassificationRules *newRule = new ClassificationRules;
 
-            if(substringsRules[i].contains("одним"))
-                newRule.limitValue = Single;
-            else if(substringsRules[i].contains("двумя"))
-                newRule.limitValue = Two;
-            else if(substringsRules[i].contains("тремя"))
-                newRule.limitValue = Three;
-            else if(substringsRules[i].contains("четырьмя"))
-                newRule.limitValue = Four;
-            else if(substringsRules[i].contains("пятью"))
-                newRule.limitValue = Five;
-            else if(substringsRules[i].contains("шестью"))
-                newRule.limitValue = Six;
-            else if(substringsRules[i].contains("семью"))
-                newRule.limitValue = Seven;
-            else if(substringsRules[i].contains("восемью"))
-                newRule.limitValue = Eight;
-            else if(substringsRules[i].contains("девятью"))
-                newRule.limitValue = Nine;
-        }
-        else if(substringsRules[i].contains(singleValue))
-        {
-            newRule.condition = propertySingleValue;
-            newRule.limitValue = NotQuantity;
+            QRegExp classRx("\"([^\"]+)\""); // находим слова внутри кавычек \" \"
+            QRegExp propertyRx("свойство \"([^\"]+)\""); // находим слова после слова "свойство \"" и до закрывающей кавычки
 
-            QRegExp rxValue("(\\d+)");
-            int pos = 0;
-            while ((pos = rxValue.indexIn(substringsRules[i], pos)) != -1) //НЕ НУЖЕН WHILE!!!!!!!!!!!!!!!!!!!!!!!!
+            int classPos = classRx.indexIn(substringsRules[i]);
+            if (classPos != -1)
+                newRule.name = classRx.cap(1);
+
+            int propertyPos = propertyRx.indexIn(substringsRules[i]);
+            if (propertyPos != -1)
+                newRule.constraint = propertyRx.cap(1);
+
+
+            QString withLength = "которое представлено";
+            QString singleValue = "в составе которого есть значение";
+            QString severalValues = "и значение этого свойства равно";
+
+            if(substringsRules[i].contains(withLength))
             {
-                newRule.integerValues.append(rxValue.cap(1).toInt());
-                pos += rxValue.matchedLength();
+                newRule.condition = propertyWithLength;
+
+                if(substringsRules[i].contains("одним"))
+                    newRule.limitValue = Single;
+                else if(substringsRules[i].contains("двумя"))
+                    newRule.limitValue = Two;
+                else if(substringsRules[i].contains("тремя"))
+                    newRule.limitValue = Three;
+                else if(substringsRules[i].contains("четырьмя"))
+                    newRule.limitValue = Four;
+                else if(substringsRules[i].contains("пятью"))
+                    newRule.limitValue = Five;
+                else if(substringsRules[i].contains("шестью"))
+                    newRule.limitValue = Six;
+                else if(substringsRules[i].contains("семью"))
+                    newRule.limitValue = Seven;
+                else if(substringsRules[i].contains("восемью"))
+                    newRule.limitValue = Eight;
+                else if(substringsRules[i].contains("девятью"))
+                    newRule.limitValue = Nine;
             }
-
-            //newRule->integerValues.append(newRule->getIntegerValues());
-        }
-        else if(substringsRules[i].contains(severalValues))
-        {
-            newRule.condition = propertyWithSeveralValues;
-            newRule.limitValue = NotQuantity;
-
-            int start = substringsRules[i].indexOf('['); // ищем первый символ "["
-            int end = substringsRules[i].indexOf(']'); // ищем первый символ "]"
-
-            QString substring = substringsRules[i].mid(start + 1, end - start - 1); // вырезаем подстроку между скобками
-            QStringList values = substring.split(",", QString::SkipEmptyParts); // разделяем подстроку по запятой
-            for (const QString& value : values)
+            else if(substringsRules[i].contains(singleValue))
             {
-                bool ok;
-                int intValue = value.trimmed().toInt(&ok); // преобразуем строку в целое число
-                if (ok)
+                newRule.condition = propertySingleValue;
+                newRule.limitValue = NotQuantity;
+
+                QRegExp rxValue("(\\d+)");
+                int pos = 0;
+                while ((pos = rxValue.indexIn(substringsRules[i], pos)) != -1) //НЕ НУЖЕН WHILE!!!!!!!!!!!!!!!!!!!!!!!!
                 {
-                    newRule.integerValues.append(intValue);// выводим полученные значения
+                    newRule.integerValues.append(rxValue.cap(1).toInt());
+                    pos += rxValue.matchedLength();
+                }
+
+                //newRule->integerValues.append(newRule->getIntegerValues());
+            }
+            else if(substringsRules[i].contains(severalValues))
+            {
+                newRule.condition = propertyWithSeveralValues;
+                newRule.limitValue = NotQuantity;
+
+                int start = substringsRules[i].indexOf('['); // ищем первый символ "["
+                int end = substringsRules[i].indexOf(']'); // ищем первый символ "]"
+
+                QString substring = substringsRules[i].mid(start + 1, end - start - 1); // вырезаем подстроку между скобками
+                QStringList values = substring.split(",", QString::SkipEmptyParts); // разделяем подстроку по запятой
+                for (const QString& value : values)
+                {
+                    bool ok;
+                    int intValue = value.trimmed().toInt(&ok); // преобразуем строку в целое число
+                    if (ok)
+                    {
+                        newRule.integerValues.append(intValue);// выводим полученные значения
+                    }
                 }
             }
+            else
+            {
+                newRule.condition = propertyWithNoValue;
+                newRule.limitValue = NotQuantity;
+            }
+            classificationRules->append(newRule);
+            //delete newRule;
         }
-        else
-        {
-            newRule.condition = propertyWithNoValue;
-            newRule.limitValue = NotQuantity;
-        }
-        classificationRules->append(newRule);
-        //delete newRule;
-    }
-    return errRule;
+        return errRule;
     }
 }
 

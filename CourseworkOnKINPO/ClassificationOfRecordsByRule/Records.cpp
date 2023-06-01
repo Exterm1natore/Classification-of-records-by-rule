@@ -8,8 +8,8 @@ Records::Records()
 
 QString Records::checkRecords (const QString& strRecords)
 {
-    if (strRecords.count() < 10)
-        return "Ошибка! Количество записей не может быть меньше 1. Допустимый диапазон: [1;100]";
+    /*if (strRecords.count() < 10)
+            return "Ошибка! Количество записей не может быть меньше 1. Допустимый диапазон: [1;100]";*/
 
     // Проверка окончания строки на точку
     if (!strRecords.endsWith("."))
@@ -47,8 +47,14 @@ QString Records::checkRecords (const QString& strRecords)
                    "(количество символов '=' и '[', ']' должно совпадать)"
                    "\nОшибка в записи: " + strOneRecord[i]; //количество = не равно [
 
+        if(strOneRecord[i].count("=") > 20)
+            return "Ошибка! У записи не может быть больше 20 свойств"
+                   "\nОшибка в записи: " + strOneRecord[i];  //Больше 20 свойств
+
         //-----------------------------ПРОверка длинны и название записи--------------------------------------------------
         int lineLength = 0; //длина какой либо строки
+
+        //-----------------------КРАЙНЕ ВАЖННО ОШИБОЧНЫЙ ТЕКСТ РЕТЮРНА ПОПРОБОВАТЬ: Стол:;--------------------------------
         if(strOneRecord[i].lastIndexOf(":") > strOneRecord[i].indexOf("=") || strOneRecord[i].lastIndexOf(":") > strOneRecord[i].indexOf("[")
                 || strOneRecord[i].lastIndexOf(":") > strOneRecord[i].indexOf("]"))
             return "Ошибка! Запись должна начинаться с названия"
@@ -193,12 +199,12 @@ QString Records::checkRecords (const QString& strRecords)
         }
 
         //----------------------------------Проверка на то чтобы не было одинаковых названий свойств записи-------------------
-        for (int i = 0; i < listProperties.size(); ++i)
+        for (int j = 0; j < listProperties.size(); ++j)
         {
-            const QString& currentString = listProperties.at(i);
-            for (int j = i + 1; j < listProperties.size(); ++j)
+            const QString& currentString = listProperties.at(j);
+            for (int k = j + 1; k < listProperties.size(); ++k)
             {
-                const QString& otherString = listProperties.at(j);
+                const QString& otherString = listProperties.at(k);
                 if (currentString == otherString)
                 {
                     return "Ошибка! В одной записи названия свойств не могут повторяться"
@@ -287,7 +293,8 @@ QString Records::checkRecords (const QString& strRecords)
             }
 
             if(numberValues > 9)
-                return "Ошибка! Количество целочисленных значений между символами '[' и ']' должно быть от 1 до 9";
+                return "Ошибка! Количество целочисленных значений между символами '[' и ']' должно быть от 1 до 9"
+                       "\"\nОшибка в записи: " + strOneRecord[i];
             start = strOneRecord[i].indexOf('[', end); // ищем следующий символ "["
             end = strOneRecord[i].indexOf(']', end + 1); // ищем следующий символ "]"
         }
@@ -378,49 +385,49 @@ QString Records::splitStringOfRecords(const QString& recordsData, QList<Records>
         return errRecord;
     else
     {
-    QStringList substringsRecords = recordsData.split(";");
+        QStringList substringsRecords = recordsData.split(";");
 
-    for(int i = 0; i < substringsRecords.count(); i++)
-    {
-        Records newRecord;
-
-        newRecord.name = substringsRecords[i].mid(0, substringsRecords[i].indexOf(":"));
-
-        QRegExp rxPropertes("([^ ,:]+)\\s*=");
-        int pos = 0;
-
-        //----------------------------------------------------------------------------------------------------------------------
-        int start = substringsRecords[i].indexOf('['); // ищем первый символ "["
-        int end = substringsRecords[i].indexOf(']'); // ищем первый символ "]"
-        //----------------------------------------------------------------------------------------------------------------------
-
-        while((pos = rxPropertes.indexIn(substringsRecords[i], pos)) != -1)
+        for(int i = 0; i < substringsRecords.count(); i++)
         {
-            QList<int> integerValues;
-            propertes = rxPropertes.cap(1);
-            pos += rxPropertes.matchedLength();
+            Records newRecord;
 
-            //-------------------------------------------------------------------------------------------------------------------
-            QString substring = substringsRecords[i].mid(start + 1, end - start - 1); // вырезаем подстроку между скобками
-            QStringList values = substring.split(",", QString::SkipEmptyParts); // разделяем подстроку по запятой
-            for (const QString& value : values)
-            {
-                bool ok;
-                int intValue = value.trimmed().toInt(&ok); // преобразуем строку в целое число
-                if (ok)
-                {
-                    integerValues.append(intValue); // выводим полученные значения
-                }
-            }
-            start = substringsRecords[i].indexOf('[', end); // ищем следующий символ "["
-            end = substringsRecords[i].indexOf(']', end + 1); // ищем следующий символ "]"
+            newRecord.name = substringsRecords[i].mid(0, substringsRecords[i].indexOf(":"));
+
+            QRegExp rxPropertes("([^ ,:]+)\\s*=");
+            int pos = 0;
+
+            //----------------------------------------------------------------------------------------------------------------------
+            int start = substringsRecords[i].indexOf('['); // ищем первый символ "["
+            int end = substringsRecords[i].indexOf(']'); // ищем первый символ "]"
             //----------------------------------------------------------------------------------------------------------------------
 
-            newRecord.relatedIntegerValues.insert(propertes, integerValues);
+            while((pos = rxPropertes.indexIn(substringsRecords[i], pos)) != -1)
+            {
+                QList<int> integerValues;
+                propertes = rxPropertes.cap(1);
+                pos += rxPropertes.matchedLength();
+
+                //-------------------------------------------------------------------------------------------------------------------
+                QString substring = substringsRecords[i].mid(start + 1, end - start - 1); // вырезаем подстроку между скобками
+                QStringList values = substring.split(",", QString::SkipEmptyParts); // разделяем подстроку по запятой
+                for (const QString& value : values)
+                {
+                    bool ok;
+                    int intValue = value.trimmed().toInt(&ok); // преобразуем строку в целое число
+                    if (ok)
+                    {
+                        integerValues.append(intValue); // выводим полученные значения
+                    }
+                }
+                start = substringsRecords[i].indexOf('[', end); // ищем следующий символ "["
+                end = substringsRecords[i].indexOf(']', end + 1); // ищем следующий символ "]"
+                //----------------------------------------------------------------------------------------------------------------------
+
+                newRecord.relatedIntegerValues.insert(propertes, integerValues);
+            }
+            record->append(newRecord);
         }
-        record->append(newRecord);
-    }
-    return errRecord;
+        return errRecord;
     }
 }
 

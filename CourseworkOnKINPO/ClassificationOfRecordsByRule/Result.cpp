@@ -23,17 +23,16 @@ QString Result::classificationRecordsByRule (const QString& textRecords, const Q
         return errRecord;
     else
     {
-
-    for(int i = 0; i < rules.count(); i++)
-    {
-        ClassificationRules rule = rules[i];
-        Result newResult;
-
-        newResult.className = rule.getName();
-
-        for(int j = 0; j < records.count(); j++)
+        for(int i = 0; i < rules.count(); i++)
         {
-            Records record = records[j];
+            ClassificationRules rule = rules[i];
+            Result newResult;
+
+            newResult.className = rule.getName();
+
+            for(int j = 0; j < records.count(); j++)
+            {
+                Records record = records[j];
                 if(record.getRelatedIntegerValues().contains(rule.getConstraint()))
                 {
                     bool flag = false;
@@ -56,7 +55,7 @@ QString Result::classificationRecordsByRule (const QString& textRecords, const Q
 
                     case propertyWithSeveralValues:
                         //Стоит уточнить на счёт порядка для нескольких значений. Подходит или нет
-                        for(int z = 0;flag == false && (z < rule.getIntegerValues().count() || record.getRelatedIntegerValues().value(rule.getConstraint()).count()); z++)
+                        for(int z = 0;flag == false && z < rule.getIntegerValues().count() && record.getRelatedIntegerValues().value(rule.getConstraint()).count(); z++)
                             if(record.getRelatedIntegerValues().value(rule.getConstraint())[z] != rule.getIntegerValues()[z])
                                 flag = true;
 
@@ -65,14 +64,14 @@ QString Result::classificationRecordsByRule (const QString& textRecords, const Q
                         break;
                     }
                 }
-        }
-        /*ПОД ВОПРОСОМ*/
-        if(newResult.recordNames.count() == 0)
-            newResult.recordNames.append("-");
+            }
+            /*ПОД ВОПРОСОМ*/
+            if(newResult.recordNames.count() == 0)
+                newResult.recordNames.append("-");
 
-        result.append(newResult);
-    }
-    return buildStringFromResult(result);
+            result.append(newResult);
+        }
+        return buildStringFromResult(result);
     }
 }
 
