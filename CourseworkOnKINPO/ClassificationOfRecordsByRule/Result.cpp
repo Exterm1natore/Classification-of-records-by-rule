@@ -5,7 +5,7 @@ Result::Result()
     className = "";
 }
 
-QString Result::classificationRecordsByRule (const QString& textRecords, const QString& textClassificationRules)
+QString Result::classificationRecordsByRule(const QString& textRecords, const QString& textClassificationRules)
 {
     ClassificationRules newRule;
     Records newRecords;

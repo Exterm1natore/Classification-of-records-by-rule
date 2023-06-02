@@ -43,4 +43,3 @@ QString FileHandling::unpackTextFile(const QString& filePath)
 
     return content;
 }
-

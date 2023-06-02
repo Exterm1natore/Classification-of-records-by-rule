@@ -8,8 +8,6 @@ Records::Records()
 
 QString Records::checkRecords (const QString& strRecords)
 {
-    /*if (strRecords.count() < 10)
-            return "Ошибка! Количество записей не может быть меньше 1. Допустимый диапазон: [1;100]";*/
 
     // Проверка окончания строки на точку
     if (!strRecords.endsWith("."))
@@ -18,10 +16,30 @@ QString Records::checkRecords (const QString& strRecords)
     if (strRecords.count(".") > 1)
         return "Ошибка! Точка ('.') может стоять только после последней записи";
 
+    //Проверка что внутри [] не разделены ;
+    int checkStart = strRecords.indexOf('['); // ищем первый символ "["
+    int checkEnd = strRecords.indexOf(']'); // ищем первый символ "]"
+
+    //Добавить проверку ЧТО ЦИФРЫ РАЗДЕЛЕНЫ ЗАПЯТОЙ и после цифр не стоит пробел
+    while (checkStart != -1 && checkEnd != -1 && checkEnd > checkStart) // пока находимся внутри скобок
+    {
+        int position = checkStart + 1;
+        while(strRecords[position] != "]")
+        {
+            if(strRecords[position] == ";")
+                return "Ошибка! Между символами \'[ ]\' цифры не могут раздиляться точкой с запятой \';\'."
+                       "\nНомер символа в тексте с записями: " + QString::number(position + 1);
+            position ++;
+        }
+        checkStart = strRecords.indexOf('[', checkEnd); // ищем следующий символ "["
+        checkEnd = strRecords.indexOf(']', checkEnd + 1); // ищем следующий символ "]"
+    }
+
     //Проверка на равенство ":" и ;"
     if(strRecords.count(":") != (strRecords.count(";") + 1))
-        return "Ошибка! Количество названий записи должно быть равно количеству записей (название записи находится перед символом ':',"
-               "а каждая запись разделена символом ';')";
+        return "Ошибка! Количество названий записи должно быть равно количеству записей. "
+               "\nУ записи должно быть название и притом только одно"
+               "(название записи находится перед символом ':', а каждая запись разделена символом ';')";
 
     const QStringList& strOneRecord = strRecords.split(";", QString::SkipEmptyParts);
 
@@ -36,20 +54,20 @@ QString Records::checkRecords (const QString& strRecords)
 
         if(strOneRecord[i].count(":") != 1)
             return "Ошибка! У записи может быть только одно название (название записи находится перед символом ':')"
-                   "\nОшибка в записи: " + strOneRecord[i]; //отсутствует символ :
+                   "\nОшибка в записи " + QString::number(i + 1) + ": " + strOneRecord[i]; //отсутствует символ :
 
         if(strOneRecord[i].count("[") != strOneRecord[i].count("]"))
             return "Ошибка! У свойства записи целочисленные значения записываются между '[' и ']' (количество '[' и ']' дожно совпадать)"
-                   "\nОшибка в записи: " + strOneRecord[i]; //количество скобор не равно
+                   "\nОшибка в записи " + QString::number(i + 1) + ": " + strOneRecord[i]; //количество скобор не равно
 
         if (strOneRecord[i].count("=") != strOneRecord[i].count("["))
             return "Ошибка! У записи каждому названию свойства соответствуют целочисленные значения которые соотносятся символом '=' "
                    "(количество символов '=' и '[', ']' должно совпадать)"
-                   "\nОшибка в записи: " + strOneRecord[i]; //количество = не равно [
+                   "\nОшибка в записи " + QString::number(i + 1) + ": " + strOneRecord[i]; //количество = не равно [
 
         if(strOneRecord[i].count("=") > 20)
             return "Ошибка! У записи не может быть больше 20 свойств"
-                   "\nОшибка в записи: " + strOneRecord[i];  //Больше 20 свойств
+                   "\nОшибка в записи " + QString::number(i + 1) + ": " + strOneRecord[i];  //Больше 20 свойств
 
         //-----------------------------ПРОверка длинны и название записи--------------------------------------------------
         int lineLength = 0; //длина какой либо строки
@@ -58,31 +76,31 @@ QString Records::checkRecords (const QString& strRecords)
         if(strOneRecord[i].lastIndexOf(":") > strOneRecord[i].indexOf("=") || strOneRecord[i].lastIndexOf(":") > strOneRecord[i].indexOf("[")
                 || strOneRecord[i].lastIndexOf(":") > strOneRecord[i].indexOf("]"))
             return "Ошибка! Запись должна начинаться с названия"
-                   "\nОшибка в записи: " + strOneRecord[i]; //ошибка ввода названия записи
+                   "\nОшибка в записи " + QString::number(i + 1) + ": " + strOneRecord[i]; //ошибка ввода названия записи
 
         for(int j = 0; strOneRecord[i][j] != ":"; j++)
         {
             if(!strOneRecord[i][j].isLetter())
                 return "Ошибка! В названии записи допускаются лишь буквы русского или английсского алфавита"
                        "\nВы ввели: \"" + strOneRecord[i].mid(0, strOneRecord[i].indexOf(":"))
-                        + "\"\nОшибка в записи: " + strOneRecord[i]; //ошибка в названии записи
+                        + "\"\nОшибка в записи " + QString::number(i + 1) + ": " + strOneRecord[i]; //ошибка в названии записи
 
             if(!strOneRecord[i][0].isUpper())
                 return "Ошибка! Название записи должно начинаться с заглавной буквы"
                        "\nВы ввели: \"" + strOneRecord[i].mid(0, strOneRecord[i].indexOf(":"))
-                        + "\"\nОшибка в записи: " + strOneRecord[i];           //Название записи не с заглавной буквы
+                        + "\"\nОшибка в записи " + QString::number(i + 1) + ": " + strOneRecord[i];           //Название записи не с заглавной буквы
 
 
             if(j > 0 && !strOneRecord[i][j].isLower())
                 return "Ошибка! В названии записи все буквы, кроме первой должны быть в нижнем регистре"
                        "\nВы ввели: \"" + strOneRecord[i].mid(0, strOneRecord[i].indexOf(":"))
-                        + "\"\nОшибка в записи: " + strOneRecord[i];       //Все буквы названия записи кроме первой должны быть в нижнем регистре
+                        + "\"\nОшибка в записи " + QString::number(i + 1) + ": " + strOneRecord[i];       //Все буквы названия записи кроме первой должны быть в нижнем регистре
 
             lineLength++;
         }
         if (lineLength < 3 || lineLength > 20)
             return "Ошибка! Название записи не может быть меньше трёх или больше двадцати символов"
-                   "\nОшибка в записи: " + strOneRecord[i]; //Дляна названия записи
+                   "\nОшибка в записи " + QString::number(i + 1) + ": " + strOneRecord[i]; //Дляна названия записи
 
 
 
@@ -103,7 +121,7 @@ QString Records::checkRecords (const QString& strRecords)
                     //isValid = false;
                     //break;
                     return "Ошибка! После каждого символа ']', кроме последнего, должна стоять запятая (',')"
-                           "\nОшибка в записи: " + strOneRecord[i];
+                           "\nОшибка в записи " + QString::number(i + 1) + ": " + strOneRecord[i];
                 }
             }
 
@@ -111,18 +129,18 @@ QString Records::checkRecords (const QString& strRecords)
             if (lastIndex + 1 < strOneRecord[i].length() && strOneRecord[i][lastIndex + 1] == ',')
                 //isValid = false;
                 return "Ошибка! После последнего символа ']' может стоять только точка с запятой (';'). Или точка ('.'), если запись последняя"
-                       "\nОшибка в записи: " + strOneRecord[i];
+                       "\nОшибка в записи " + QString::number(i + 1) + ": " + strOneRecord[i];
         }
         else
 
             // Если найден символ "," после последнего символа "]", устанавливаем isValid в false
             //isValid = false;
             return "Ошибка! После последнего символа ']' может стоять только точка с запятой (';'). Или точка ('.'), если запись последняя"
-                   "\nОшибка в записи: " + strOneRecord[i];
+                   "\nОшибка в записи " + QString::number(i + 1) + ": " + strOneRecord[i];
 
         if (!isValid)
             return "Ошибка! После каждого символа ']' должна стоять запятая (','), кроме последнего символа ']'"
-                   "\nОшибка в записи: " + strOneRecord[i];
+                   "\nОшибка в записи " + QString::number(i + 1) + ": " + strOneRecord[i];
 
 
         //-----------------------------------------------
@@ -134,18 +152,18 @@ QString Records::checkRecords (const QString& strRecords)
         {
             if(strOneRecord[i][j] == "=" && strOneRecord[i][j + 1] != "[")
                 return "Ошибка! После символа '=' должен стоять символ '['"
-                       "\nОшибка в записи: " + strOneRecord[i];
+                       "\nОшибка в записи " + QString::number(i + 1) + ": " + strOneRecord[i];
 
             else if(strOneRecord[i][j] == "[" && strOneRecord[i][j - 1] != "=" && j > 0)
                 return "Ошибка! Перед символом '[' должен стоять символ '='"
-                       "\nОшибка в записи: " + strOneRecord[i];
+                       "\nОшибка в записи " + QString::number(i + 1) + ": " + strOneRecord[i];
 
             //else if(strOneRecord[i][j] == "]" && equalSymbal == strOneRecord[i].count("="))
             //return "Ошибка! Перед символом";
 
             else if((j + 1) >= strOneRecord[i].count() && equalSymbal != 0)
                 return "Ошибка! Символ '=' должен быть перед символом '['"
-                       "\nОшибка в записи: " + strOneRecord[i];
+                       "\nОшибка в записи " + QString::number(i + 1) + ": " + strOneRecord[i];
 
             else if(strOneRecord[i][j] == "=")
                 equalSymbal--;
@@ -153,12 +171,12 @@ QString Records::checkRecords (const QString& strRecords)
             //Проверка на то что перед = нет пробела или раазделителя
             if(strOneRecord[i][0] == "=")
                 return "Ошибка! Строка должна начинаться с названия записи и не может начинаться с '='"
-                       "\nОшибка в записи: " + strOneRecord[i];
+                       "\nОшибка в записи " + QString::number(i + 1) + ": " + strOneRecord[i];
 
             else if(strOneRecord[i][j] == "=" && (strOneRecord[i][j-1].isSpace() || !strOneRecord[i][j-1].isLetter()))
                 return "Ошибка! Перед символом '=' должно идти название записи "
                        "(другие символы межу названием записи и символом '=' недопускаются)"
-                       "\nОшибка в записи: " + strOneRecord[i];
+                       "\nОшибка в записи " + QString::number(i + 1) + ": " + strOneRecord[i];
         }
         //--------------------------------------------------------------------------------------------------------------------
 
@@ -179,19 +197,19 @@ QString Records::checkRecords (const QString& strRecords)
                 if(substring.count() < 3 || substring.count() > 20)
                     return "Ошибка! Название свойства записи не может быть меньше трёх или больше двадцати символов"
                            "\nВы ввели: \"" + substring +
-                            "\"\nОшибка в записи: " + strOneRecord[i]; //длина названия свойства меньше 3 или больше 20
+                            "\"\nОшибка в записи " + QString::number(i + 1) + ": " + strOneRecord[i]; //длина названия свойства меньше 3 или больше 20
 
                 for(int j = 0; j < substring.count(); j++)
                 {
                     if(!substring[j].isLetter())
                         return "Ошибка! В названии свойства записи допускаются лишь буквы русского или английсского алфавита"
                                "\nВы ввели: \"" + substring +
-                                "\"\nОшибка в записи: " + strOneRecord[i];//в названии свойства есть не только буквы
+                                "\"\nОшибка в записи " + QString::number(i + 1) + ": " + strOneRecord[i];//в названии свойства есть не только буквы
 
                     if (!substring[j].isLower())
                         return "Ошибка! В названии свойства записи не допускается использовать верхний регистр"
                                "\nВы ввели: \"" + substring +
-                                "\"\nОшибка в записи: " + strOneRecord[i];
+                                "\"\nОшибка в записи " + QString::number(i + 1) + ": " + strOneRecord[i];
                 }
 
                 listProperties.append(substring); //Проверка совпадения свойств записи
@@ -209,7 +227,7 @@ QString Records::checkRecords (const QString& strRecords)
                 {
                     return "Ошибка! В одной записи названия свойств не могут повторяться"
                            "\nНазвание свойства: \"" + currentString +
-                            "\"\nОшибка в записи: " + strOneRecord[i];; // Найдено повторяющиеся строки
+                            "\"\nОшибка в записи " + QString::number(i + 1) + ": " + strOneRecord[i];; // Найдено повторяющиеся строки
                 }
             }
         }
@@ -228,39 +246,39 @@ QString Records::checkRecords (const QString& strRecords)
 
             if(checkEnd - checkStart == 1)
                 return "Ошибка! Поле между символами '[' и ']' не должно быть пустым"
-                       "\nОшибка в записи: " + strOneRecord[i]; //поле [..] не может быть пустым
+                       "\nОшибка в записи " + QString::number(i + 1) + ": " + strOneRecord[i]; //поле [..] не может быть пустым
             //Ситоит в следующих 2 if убрать условие strOneRecord[i][checkStart + 1].isSpace() т.к.
 
             if(strOneRecord[i][checkStart + 1].isSpace() || !strOneRecord[i][checkStart+ 1].isNumber())
                 return "Ошибка! Не допускается сразу после символа '[' использование чего-либо, кроме цифр"
-                       "\nОшибка в записи: " + strOneRecord[i]; //если после [ идёт пробел или любой символ кроме числа
+                       "\nОшибка в записи " + QString::number(i + 1) + ": " + strOneRecord[i]; //если после [ идёт пробел или любой символ кроме числа
 
             if(strOneRecord[i][checkEnd - 1].isSpace() || !strOneRecord[i][checkEnd - 1].isNumber())
                 return "Ошибка! Не допускается сразу перед символом ']' использование чего-либо, кроме цифр"
-                       "\nОшибка в записи: " + strOneRecord[i]; //если перед ] идёт пробел или любой символ кроме числа
+                       "\nОшибка в записи " + QString::number(i + 1) + ": " + strOneRecord[i]; //если перед ] идёт пробел или любой символ кроме числа
 
             while(strOneRecord[i][position] != "]")
             {
                 if(!strOneRecord[i][position].isNumber() && !strOneRecord[i][position].isSpace() && strOneRecord[i][position] != ",")
                     return "Ошибка! Не допускается использование между символами '[' и ']' всего, кроме 'пробела', ',' или цифр"
-                           "\nОшибка в записи: " + strOneRecord[i];
+                           "\nОшибка в записи " + QString::number(i + 1) + ": " + strOneRecord[i];
 
                 if(strOneRecord[i][position].isSpace() && strOneRecord[i][position + 1].isSpace())
                     return "Ошибка! Не допускается между символами '[' и ']' использование больше одного 'пробела'"
-                           "\nОшибка в записи: " + strOneRecord[i];
+                           "\nОшибка в записи " + QString::number(i + 1) + ": " + strOneRecord[i];
 
                 if(strOneRecord[i][position] == "," && strOneRecord[i][position + 1] == ",")
                     return "Ошибка! Не допускается между символами '[' и ']' использование больше одной запятой (',')"
-                           "\nОшибка в записи: " + strOneRecord[i];
+                           "\nОшибка в записи " + QString::number(i + 1) + ": " + strOneRecord[i];
 
                 if(strOneRecord[i][position].isSpace() && strOneRecord[i][position + 1] == ",")
                     return "Ошибка! Не допускается между символами '[' и ']' использование после 'пробела' запятой (',')"
-                           "\nОшибка в записи: " + strOneRecord[i];
+                           "\nОшибка в записи " + QString::number(i + 1) + ": " + strOneRecord[i];
 
                 if(strOneRecord[i][position + 1] != "]" && strOneRecord[i][position].isNumber()
                         && !strOneRecord[i][position + 1].isNumber() && strOneRecord[i][position + 1] != ",")
                     return "Ошибка! Между символами '[' и ']' после цифры должна стоять запятая (',')"
-                           "\nОшибка в записи: " + strOneRecord[i];
+                           "\nОшибка в записи " + QString::number(i + 1) + ": " + strOneRecord[i];
 
                 position ++;
             }
@@ -288,13 +306,13 @@ QString Records::checkRecords (const QString& strRecords)
                     if(intValue < 1 || intValue > 99)
                         return "Ошибка! Между символами '[' и ']' цифры должны лежать в диапазоне [1;99]"
                                "\nВы ввели: \"" + value.trimmed() +
-                                "\"\nОшибка в записи: " + strOneRecord[i];
+                                "\"\nОшибка в записи " + QString::number(i + 1) + ": " + strOneRecord[i];
                 numberValues++;
             }
 
             if(numberValues > 9)
                 return "Ошибка! Количество целочисленных значений между символами '[' и ']' должно быть от 1 до 9"
-                       "\"\nОшибка в записи: " + strOneRecord[i];
+                       "\"\nОшибка в записи " + QString::number(i + 1) + ": " + strOneRecord[i];
             start = strOneRecord[i].indexOf('[', end); // ищем следующий символ "["
             end = strOneRecord[i].indexOf(']', end + 1); // ищем следующий символ "]"
         }
@@ -310,11 +328,11 @@ QString Records::checkRecords (const QString& strRecords)
 
             if(!strOneRecord[i][j].isSpace())
                 return "Ошибка! Между символом ':' и названием свойства может быть только 'пробел'"
-                       "\nОшибка в записи: " + strOneRecord[i];
+                       "\nОшибка в записи " + QString::number(i + 1) + ": " + strOneRecord[i];
 
             if(strOneRecord[i][j].isSpace() && strOneRecord[i][j + 1].isSpace())
                 return "Ошибка! Между символом ':' и названием свойства может быть только один 'пробел'"
-                       "\nОшибка в записи: " + strOneRecord[i];
+                       "\nОшибка в записи " + QString::number(i + 1) + ": " + strOneRecord[i];
         }
 
         for(int j = strOneRecord[i].indexOf("]"); j < strOneRecord[i].lastIndexOf("["); j++)
@@ -325,20 +343,24 @@ QString Records::checkRecords (const QString& strRecords)
 
                 if(strOneRecord[i][j] == "," || strOneRecord[i][j + 1] == ",")
                     return "Ошибка! Между концом одного свойства и началом другого должна быть одна запятая и может быть только один 'пробел'"
-                           "\nОшибка в записи: " + strOneRecord[i];
+                           "\nОшибка в записи " + QString::number(i + 1) + ": " + strOneRecord[i];
                 else if(strOneRecord[i][j].isSpace() && strOneRecord[i][j + 1].isSpace())
+                {
+                    QString errTXT = strOneRecord[i];
+                    errTXT.replace(" ", "*", Qt::CaseInsensitive);
                     return "Ошибка! Между концом одного свойства и началом другого должно быть не больше одного 'пробела'"
-                           "\nОшибка в записи: " + strOneRecord[i];
+                           "\nОшибка в записи " + QString::number(i + 1) + ": " + errTXT;
+                }
             }
         }
 
         if(strOneRecord[i].lastIndexOf("]") != strOneRecord[i].count() - 1 && strOneRecord[i].count(".") == 0)
             return "Ошибка! После последнего свойства записи не должно быть никаких символов, кроме ';', которая разделяет записи"
-                   "\nОшибка в записи: " + strOneRecord[i];
+                   "\nОшибка в записи " + QString::number(i + 1) + ": " + strOneRecord[i];
 
         if(strOneRecord[i].lastIndexOf("]") != strOneRecord[i].count() - 2 && strOneRecord[i].count(".") == 1)
             return "Ошибка! После последнего свойства записи не должно быть никаких символов, кроме '.' после последней записи"
-                   "\nОшибка в записи: " + strOneRecord[i];
+                   "\nОшибка в записи " + QString::number(i + 1) + ": " + strOneRecord[i];
 
         //Проверка на то чтобы формат свойст был верный
         QRegularExpression rex(",(?![^\\[]*\\])");
@@ -445,4 +467,3 @@ QString Records::getName()
 {
     return this -> name;
 }
-

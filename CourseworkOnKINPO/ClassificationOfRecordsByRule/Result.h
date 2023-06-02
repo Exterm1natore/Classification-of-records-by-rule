@@ -9,7 +9,7 @@ class Result
 {
 public:
     Result();
-    QString classificationRecordsByRule (const QString& textRecords, const QString& textClassificationRules);
+    QString classificationRecordsByRule(const QString& textRecords, const QString& textClassificationRules);
     QString buildStringFromResult (const QList<Result>& result);
     QString getClassName();
     QList<QString> getRecordNames();
