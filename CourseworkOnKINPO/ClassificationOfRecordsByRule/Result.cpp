@@ -7,11 +7,15 @@ Result::Result()
 
 QString Result::classificationRecordsByRule(const QString& textRecords, const QString& textClassificationRules)
 {
+    QList<Result> result;
+    QList<Records> records;
+    QList<ClassificationRules> rules;
     ClassificationRules newRule;
     Records newRecords;
-    QString errRule = newRule.splitStringOfClassificationRules(textClassificationRules, &rules);
-    QString errRecord = newRecords.splitStringOfRecords(textRecords, &records);
-    QString errData;
+    QString errRule = "Текст правил классификации:";
+    errRule += "\n" + newRule.splitStringOfClassificationRules(textClassificationRules, &rules);
+    QString errRecord = "Текст записей:";
+    errRecord +="\n" + newRecords.splitStringOfRecords(textRecords, &records);
 
     if(!errRule.contains("Всё хорошо!") && !errRecord.contains("Всё хорошо!"))
         return errRule + "\n\n" + errRecord;
@@ -54,8 +58,10 @@ QString Result::classificationRecordsByRule(const QString& textRecords, const QS
                         break;
 
                     case propertyWithSeveralValues:
+                        if(rule.getIntegerValues().count() != record.getRelatedIntegerValues().value(rule.getConstraint()).count())
+                            break;
                         //Стоит уточнить на счёт порядка для нескольких значений. Подходит или нет
-                        for(int z = 0;flag == false && z < rule.getIntegerValues().count() && record.getRelatedIntegerValues().value(rule.getConstraint()).count(); z++)
+                        for(int z = 0;flag == false && z < rule.getIntegerValues().count(); z++)
                             if(record.getRelatedIntegerValues().value(rule.getConstraint())[z] != rule.getIntegerValues()[z])
                                 flag = true;
 

@@ -6,6 +6,107 @@ ClassificationRules::ClassificationRules()
     constraint = "";
 }
 
+QString ClassificationRules::splitStringOfClassificationRules(const QString& rulesData, QList<ClassificationRules>* classificationRules)
+{
+    ClassificationRules checkRules;
+    QString errRule = checkRules.checkClassificationRules(rulesData);
+
+    if(!errRule.contains("Всё хорошо!"))
+        return errRule;
+    else
+    {
+        QStringList substringsRules = rulesData.split(";");
+
+        for(int i = 0; i < substringsRules.count(); i++)
+        {
+            ClassificationRules newRule;
+            //ClassificationRules *newRule = new ClassificationRules;
+
+            QRegExp classRx("\"([^\"]+)\""); // находим слова внутри кавычек \" \"
+            QRegExp propertyRx("свойство \"([^\"]+)\""); // находим слова после слова "свойство \"" и до закрывающей кавычки
+
+            int classPos = classRx.indexIn(substringsRules[i]);
+            if (classPos != -1)
+                newRule.name = classRx.cap(1);
+
+            int propertyPos = propertyRx.indexIn(substringsRules[i]);
+            if (propertyPos != -1)
+                newRule.constraint = propertyRx.cap(1);
+
+            QString withLength = "которое представлено";
+            QString singleValue = "в составе которого есть значение";
+            QString severalValues = "и значение этого свойства равно";
+
+            if(substringsRules[i].contains(withLength))
+            {
+                newRule.condition = propertyWithLength;
+
+                if(substringsRules[i].contains("одним"))
+                    newRule.limitValue = Single;
+                else if(substringsRules[i].contains("двумя"))
+                    newRule.limitValue = Two;
+                else if(substringsRules[i].contains("тремя"))
+                    newRule.limitValue = Three;
+                else if(substringsRules[i].contains("четырьмя"))
+                    newRule.limitValue = Four;
+                else if(substringsRules[i].contains("пятью"))
+                    newRule.limitValue = Five;
+                else if(substringsRules[i].contains("шестью"))
+                    newRule.limitValue = Six;
+                else if(substringsRules[i].contains("семью"))
+                    newRule.limitValue = Seven;
+                else if(substringsRules[i].contains("восемью"))
+                    newRule.limitValue = Eight;
+                else if(substringsRules[i].contains("девятью"))
+                    newRule.limitValue = Nine;
+            }
+            else if(substringsRules[i].contains(singleValue))
+            {
+                newRule.condition = propertySingleValue;
+                newRule.limitValue = NotQuantity;
+
+                QRegExp rxValue("(\\d+)");
+                int pos = 0;
+                while ((pos = rxValue.indexIn(substringsRules[i], pos)) != -1) //НЕ НУЖЕН WHILE!!!!!!!!!!!!!!!!!!!!!!!!
+                {
+                    newRule.integerValues.append(rxValue.cap(1).toInt());
+                    pos += rxValue.matchedLength();
+                }
+
+                //newRule->integerValues.append(newRule->getIntegerValues());
+            }
+            else if(substringsRules[i].contains(severalValues))
+            {
+                newRule.condition = propertyWithSeveralValues;
+                newRule.limitValue = NotQuantity;
+
+                int start = substringsRules[i].indexOf('['); // ищем первый символ "["
+                int end = substringsRules[i].indexOf(']'); // ищем первый символ "]"
+
+                QString substring = substringsRules[i].mid(start + 1, end - start - 1); // вырезаем подстроку между скобками
+                QStringList values = substring.split(",", QString::SkipEmptyParts); // разделяем подстроку по запятой
+                for (const QString& value : values)
+                {
+                    bool ok;
+                    int intValue = value.trimmed().toInt(&ok); // преобразуем строку в целое число
+                    if (ok)
+                    {
+                        newRule.integerValues.append(intValue);// выводим полученные значения
+                    }
+                }
+            }
+            else
+            {
+                newRule.condition = propertyWithNoValue;
+                newRule.limitValue = NotQuantity;
+            }
+            classificationRules->append(newRule);
+            //delete newRule;
+        }
+        return errRule;
+    }
+}
+
 QString ClassificationRules::checkClassificationRules(const QString& strRule)
 {
     // Паттерн для проверки первого типа строки
@@ -32,13 +133,19 @@ QString ClassificationRules::checkClassificationRules(const QString& strRule)
     // Регулярное выражение первого паттерна
     QRegularExpression regex4(pattern1);
 
+    // Если входной текст правил классификации является пустым
+    QString emptyStr = strRule.trimmed();
+    if(emptyStr.isEmpty())
+        return "Ошибка! Файл с входными данными правил классификации является пустым.";
+
     // Если входной текст правил классификации не заканчивается точкой - вернуть ошибку
     if (!strRule.endsWith("."))
         return "Ошибка! В конце текста правил классификации должна стоять точка ('.')"; //Если заканчивается не на точку
 
     // Если в тексте правил классификации больше одной точки - вернуть ошибку
     if (strRule.count(".") > 1)
-        return "Ошибка! В тексте правил может быть только одна точка ('.') и должна находится после последнего правила";
+        return "Ошибка! В тексте правил классификации может быть только одна точка ('.'), которая должна находится после последнего правила"
+                "\nНомер ошибочного символа в тексте с правилами классификации: " + QString::number(strRule.indexOf(".") + 1);
 
     // Разделить текст правил по символу разделения правил классификации - точки с запятой
     const QStringList& strOneRule = strRule.split(";", QString::SkipEmptyParts);
@@ -65,7 +172,12 @@ QString ClassificationRules::checkClassificationRules(const QString& strRule)
             return "Ошибка! Неверный формат ввода. Правило должно заканчиваться на следующие символы ('\" или '.' или 'и' или 'м')"
                    ", в зависимости от типа правила."
                    "\nПроверьте правильность постановки точки с запятой \';\'."
-                   "\nОшибка в тексте правила " + QString::number(i + 1) + ": " + strOneRule[i] + ";";
+                   "\nОшибка в тексте правила " + QString::number(i + 1) + ": " + strOneRule[i] + ";"
+                   "\n\nДопустимые форматы: "
+                   "\n1) 'Запись принадлежит классу \"<название класса>\", если у нее есть свойство \"<название свойства>\"'"
+                   "\n2) 'Запись принадлежит классу \"<название класса>\", если у нее есть свойство \"<название свойства>\", которое представлено ([одним|двумя|тремя|четырьмя|пятью|шестью|семью|восемью|девятью]) значением(ями)'"
+                   "\n3) 'Запись принадлежит классу \"<название класса>\", если у нее есть свойство \"<название свойства>\", в составе которого есть значение \"<одно целочисленное значение>\"'"
+                   "\n4) 'Запись принадлежит классу \"<название класса>\", если у нее есть свойство \"<название свойства>\" и значение этого свойства равно \"[целочисленные значения через ',']\"'";
 
         /* Если правило начинается не с указанного формата, а с пробела (то же довольно частая ошибка,
           есть смысл выделить в отдельную проверку)*/
@@ -94,8 +206,8 @@ QString ClassificationRules::checkClassificationRules(const QString& strRule)
                    "\nОшибка в правиле " + QString::number(i + 1) + ": " + strOneRule[i];
 
         // Проверка что текст правила начинается с указанного формата и перед ним не стоят другие символы
-        if(!strOneRule[i].startsWith("Запись принадлежит классу") || strOneRule[i].count("Запись принадлежит классу") > 1)
-            return "Ошибка! Неверный формат ввода правила. Перед правилом есть лишние символы"
+        if(!strOneRule[i].startsWith("Запись принадлежит классу") || strOneRule[i].count("Запись принадлежит классу") != 1)
+            return "Ошибка! Неверный формат ввода правила."
                    "\nОшибка в правиле " + QString::number(i + 1) + ": " + strOneRule[i] +
                     "\n\nДопустимые форматы: "
                     "\n1) 'Запись принадлежит классу \"<название класса>\", если у нее есть свойство \"<название свойства>\"'"
@@ -185,17 +297,17 @@ QString ClassificationRules::checkClassificationRules(const QString& strRule)
             {
 
                 if(strOneRule[i].count("[") != 1 && strOneRule[i].count("]") != 1)
-                    return "Ошибка! Неверный формат ввода правила с несколькими целочисленными ограничениями. "
+                    return "Ошибка! Неверный формат ввода дополнительного ограничения в виде конкретных целочисленных значений. "
                            "\nДанный тип правила должен содержать по одному символу '[' и ']'"
                            "\nОшибка в правиле " + QString::number(i + 1) + ": " + strOneRule[i];
 
                 if(strOneRule[i].indexOf("]") + 2 != strOneRule[i].count() && strOneRule[i].count(".") == 0)
-                    return "Ошибка! Неверный формат ввода правила с несколькими целочисленными ограничениями. "
+                    return "Ошибка! Неверный формат ввода дополнительного ограничения в виде конкретных целочисленных значений. "
                            "\nДанный тип правила должен заканчиваться на ']\"'"
                            "\nОшибка в правиле " + QString::number(i + 1) + ": " + strOneRule[i];
 
                 if(strOneRule[i].count(".") == 1 && strOneRule[i][strOneRule[i].indexOf("]") + 2] != ".")
-                    return "Ошибка! Неверный формат ввода правила с несколькими целочисленными ограничениями. "
+                    return "Ошибка! Неверный формат ввода дополнительного ограничения в виде конкретных целочисленных значений. "
                            "\nДанный тип правила должен заканчиваться на ']\".'"
                            "\nОшибка в правиле " + QString::number(i + 1) + ": " + strOneRule[i];
 
@@ -209,50 +321,50 @@ QString ClassificationRules::checkClassificationRules(const QString& strRule)
                 position = checkStart + 1;
 
                 if(checkEnd - checkStart == 1)
-                    return "Ошибка! Неверный формат ввода правила с несколькими целочисленными ограничениями. "
+                    return "Ошибка! Неверный формат ввода дополнительного ограничения в виде конкретных целочисленных значений. "
                            "\nПоле между символами '[' и ']' не должно быть пустым"
                            "\nОшибка в правиле " + QString::number(i + 1) + ": " + strOneRule[i]; //поле [..] не может быть пустым
                 //Ситоит в следующих 2 if убрать условие strOneRecord[i][checkStart + 1].isSpace() т.к.
 
                 if(strOneRule[i][checkStart + 1].isSpace() || !strOneRule[i][checkStart+ 1].isNumber())
-                    return "Ошибка! Неверный формат ввода правила с несколькими целочисленными ограничениями. "
+                    return "Ошибка! Неверный формат ввода дополнительного ограничения в виде конкретных целочисленных значений. "
                            "\nНе допускается сразу после символа '[' использование чего-либо, кроме цифр"
                            "\nОшибка в правиле " + QString::number(i + 1) + ": " + strOneRule[i]; //если после [ идёт пробел или любой символ кроме числа
 
                 if(strOneRule[i][checkEnd - 1].isSpace() || !strOneRule[i][checkEnd - 1].isNumber())
-                    return "Ошибка! Неверный формат ввода правила с несколькими целочисленными ограничениями. "
+                    return "Ошибка! Неверный формат ввода дополнительного ограничения в виде конкретных целочисленных значений. "
                            "\nНе допускается сразу перед символом ']' использование чего-либо, кроме цифр"
                            "\nОшибка в правиле " + QString::number(i + 1) + ": " + strOneRule[i]; //если перед ] идёт пробел или любой символ кроме числа
 
                 while(strOneRule[i][position] != "]")
                 {
                     if(!strOneRule[i][position].isNumber() && !strOneRule[i][position].isSpace() && strOneRule[i][position] != ",")
-                        return "Ошибка! Неверный формат ввода правила с несколькими целочисленными ограничениями. "
+                        return "Ошибка! Неверный формат ввода дополнительного ограничения в виде конкретных целочисленных значений. "
                                "\nНе допускается использование между символами '[' и ']' всего, кроме 'пробела', ',' или цифр"
                                "\nОшибка в правиле " + QString::number(i + 1) + ": " + strOneRule[i]; //Не допускается использование между символами '[' и ']' всего, кроме 'пробела', ',' или цифр"
 
 
                     if(strOneRule[i][position].isSpace() && strOneRule[i][position + 1].isSpace())
-                        return "Ошибка! Неверный формат ввода правила с несколькими целочисленными ограничениями. "
+                        return "Ошибка! Неверный формат ввода дополнительного ограничения в виде конкретных целочисленных значений. "
                                "\nНе допускается между символами '[' и ']' использование больше одного 'пробела'"
                                "\nОшибка в правиле " + QString::number(i + 1) + ": " + strOneRule[i]; //"Ошибка! Не допускается между символами '[' и ']' использование больше одного 'пробела'"
 
 
                     if(strOneRule[i][position] == "," && strOneRule[i][position + 1] == ",")
-                        return "Ошибка! Неверный формат ввода правила с несколькими целочисленными ограничениями. "
+                        return "Ошибка! Неверный формат ввода дополнительного ограничения в виде конкретных целочисленных значений. "
                                "\nНе допускается между символами '[' и ']' использование больше одной запятой (',') подряд"
                                "\nОшибка в правиле " + QString::number(i + 1) + ": " + strOneRule[i]; //"Ошибка! Не допускается между символами '[' и ']' использование больше одной запятой (',')"
 
 
                     if(strOneRule[i][position].isSpace() && strOneRule[i][position + 1] == ",")
-                        return "Ошибка! Неверный формат ввода правила с несколькими целочисленными ограничениями. "
+                        return "Ошибка! Неверный формат ввода дополнительного ограничения в виде конкретных целочисленных значений. "
                                "\nНе допускается между символами '[' и ']' использование после 'пробела' запятой (',')"
                                "\nОшибка в правиле " + QString::number(i + 1) + ": " + strOneRule[i]; //"Ошибка! Не допускается между символами '[' и ']' использование после 'пробела' запятой (',')"
 
 
                     if(strOneRule[i][position + 1] != "]" && strOneRule[i][position].isNumber()
                             && !strOneRule[i][position + 1].isNumber() && strOneRule[i][position + 1] != ",")
-                        return "Ошибка! Неверный формат ввода правила с несколькими целочисленными ограничениями. "
+                        return "Ошибка! Неверный формат ввода дополнительного ограничения в виде конкретных целочисленных значений. "
                                "\nМежду символами '[' и ']' после цифры должна стоять запятая (',')"
                                "\nОшибка в правиле " + QString::number(i + 1) + ": " + strOneRule[i]; //"Ошибка! Между символами '[' и ']' после цифры должна стоять запятая (',')"
 
@@ -276,7 +388,7 @@ QString ClassificationRules::checkClassificationRules(const QString& strRule)
                     int intValue = value.trimmed().toInt(&ok); // преобразуем строку в целое число
                     if (ok)
                         if(intValue < 1 || intValue > 99)
-                            return "Ошибка! Неверный формат ввода правила с несколькими целочисленными ограничениями. "
+                            return "Ошибка! Неверный формат ввода дополнительного ограничения в виде конкретных целочисленных значений. "
                                    "\nМежду символами '[' и ']' цифры должны лежать в диапазоне [1;99]"
                                    "\nВы ввели: " + value.trimmed() +
                                     "\nОшибка в правиле " + QString::number(i + 1) + ": " + strOneRule[i]; //"Ошибка! Между символами '[' и ']' цифры должны лежать в диапазоне [1;99]"
@@ -284,30 +396,32 @@ QString ClassificationRules::checkClassificationRules(const QString& strRule)
                     numberValues++;
                 }
                 if(numberValues > 9)
-                    return "Ошибка! Количество целочисленных значений между символами '[' и ']' должно быть от 1 до 9";
+                    return "Ошибка! Неверный формат ввода дополнительного ограничения в виде конкретных целочисленных значений. "
+                           "\nКоличество целочисленных значений между символами '[' и ']' должно быть от 1 до 9"
+                            "\nОшибка в правиле " + QString::number(i + 1) + ": " + strOneRule[i];;
                 //-----------------------------------------------------------------------------------------------------------------------------------------
             }
             else if (regex2.match(strOneRule[i]).hasMatch())
             {
                 if(strOneRule[i].lastIndexOf("\"") + 1 != strOneRule[i].count() && strOneRule[i].count(".") == 0)
-                    return "Ошибка! Неверный формат ввода правила с одним целочисленным значением. "
+                    return "Ошибка! Неверный формат ввода дополнительного ограничения в виде одного целочисленного значения. "
                            "\nПравило должно заканчиваться на ' \" '"
                            "\nОшибка в правиле " + QString::number(i + 1) + ": " + strOneRule[i]; //Ошибка в написании (Больше чем шаблон)
 
                 if(strOneRule[i].count(".") == 1 && strOneRule[i][strOneRule[i].lastIndexOf("\"") + 1] != ".")
-                    return "Ошибка! Неверный формат ввода правила с одним целочисленным значением. "
+                    return "Ошибка! Неверный формат ввода дополнительного ограничения в виде одного целочисленного значения. "
                            "\nВ последнем правиле сразу после последней кавычки \" должна стоять точка '.'"
                            "\nОшибка в правиле " + QString::number(i + 1) + ": " + strOneRule[i]; //Ошибка в написании (Больше чем шаблон)
 
                 for(int j = 0; j < substrings[2].count(); j++)
                     if(!substrings[2][j].isNumber())
-                        return "Ошибка! Неверный формат ввода правила с одним целочисленным значением. "
+                        return "Ошибка! Неверный формат ввода дополнительного ограничения в виде одного целочисленного значения. "
                                "\nМежду последними двумя символами ' \" ' должно быть целочисленное значение и только одно"
                                "\nВы ввели: " + substrings[2] +
                                 "\nОшибка в правиле " + QString::number(i + 1) + ": " + strOneRule[i]; //Можно использовать только цифры
 
                 if(substrings[2].toInt() < 1 || substrings[2].toInt() > 99)
-                    return "Ошибка! Неверный формат ввода правила с одним целочисленным значением. "
+                    return "Ошибка! Неверный формат ввода дополнительного ограничения в виде одного целочисленного значения. "
                            "\nЦелочисленное значение должно лежать в диапазоне [1;99]"
                            "\nВы ввели: " + substrings[2] +
                             "\nОшибка в правиле " + QString::number(i + 1) + ": " + strOneRule[i]; //Нельзя чтобы число было меньше 1 и больше 99
@@ -316,24 +430,24 @@ QString ClassificationRules::checkClassificationRules(const QString& strRule)
             else if (regex3.match(strOneRule[i]).hasMatch())
             {
                 if(strOneRule[i].count("\"") != 4)
-                    return "Ошибка! Неверный формат ввода правила с допустимым количеством целочисленных значений записи"
+                    return "Ошибка! Неверный формат ввода дополнительного ограничения в виде количества целочисленных значений."
                            "\nКоличество символов ' \" ' должно быть равно четырём"
                            "\nОшибка в правиле " + QString::number(i + 1) + ": " + strOneRule[i]; //символов " должно быть 4
 
                 if(strOneRule[i].lastIndexOf("и") + 1 != strOneRule[i].count() && strOneRule[i].lastIndexOf("м") + 1 != strOneRule[i].count()
                         && strOneRule[i].count(".") == 0)
-                    return "Ошибка! Неверный формат ввода правила с допустимым количеством целочисленных значений записи"
+                    return "Ошибка! Неверный формат ввода дополнительного ограничения в виде количества целочисленных значений."
                            "\nПравило должно заканичиваться на 'м' или 'и', в зависимости от указанного значения (одним) или (двумя - девятью)"
                            "\nОшибка в правиле " + QString::number(i + 1) + ": " + strOneRule[i]; //Не соответствует шаблону
 
                 if(strOneRule[i].count(".") == 1 && strOneRule[i][strOneRule[i].lastIndexOf("и") + 1] != "."
                         && strOneRule[i][strOneRule[i].lastIndexOf("м") + 1] != ".")
-                    return "Ошибка! Неверный формат ввода правила с допустимым количеством целочисленных значений записи"
+                    return "Ошибка! Неверный формат ввода дополнительного ограничения в виде количества целочисленных значений."
                            "\nПравило должно заканичиваться на 'м.' или 'и.', в зависимости от указанного значения (одним) или (двумя - девятью)"
                            "\nОшибка в правиле " + QString::number(i + 1) + ": " + strOneRule[i]; //Не соответсвует шаблону
 
                 if (!strOneRule[i].contains("значением") && !strOneRule[i].contains("значениями"))
-                    return "Ошибка! Неверный формат ввода правила с допустимым количеством целочисленных значений записи"
+                    return "Ошибка! Неверный формат ввода дополнительного ограничения в виде количества целочисленных значений."
                            "\nОтсутствует слово 'значением' или 'значениями', в зависимости от указанного значения (одним) или (двумя - девятью)"
                            "\nОшибка в правиле " + QString::number(i + 1) + ": " + strOneRule[i]; //Нет слов значением или значениями
 
@@ -351,37 +465,37 @@ QString ClassificationRules::checkClassificationRules(const QString& strRule)
                 if(!strOneRule[i].contains(value_1) && !strOneRule[i].contains(value_2) && !strOneRule[i].contains(value_3) &&
                         !strOneRule[i].contains(value_4) && !strOneRule[i].contains(value_5) && !strOneRule[i].contains(value_6) &&
                         !strOneRule[i].contains(value_7) && !strOneRule[i].contains(value_8) && !strOneRule[i].contains(value_9))
-                    return "Ошибка! Неверный формат ввода правила с допустимым количеством целочисленных значений записи"
+                    return "Ошибка! Неверный формат ввода дополнительного ограничения в виде количества целочисленных значений."
                            "\nНеверно указано количество допустимых значений в записи."
                            "\nДопустимы следующие значения: " + value_1 + ", " + value_2 + ", " + value_3 + ", " + value_4 + ", " + value_5 + ", "
                             + value_6 + ", " + value_7 + ", " + value_8 + ", " + value_9 +
                             "\nОшибка в правиле " + QString::number(i + 1) + ": " + strOneRule[i]; //Нет ни одного из доступных значений
 
                 if(strOneRule[i].contains(value_1) && !strOneRule[i].contains("значением"))
-                    return "Ошибка! Неверный формат ввода правила с допустимым количеством целочисленных значений записи"
+                    return "Ошибка! Неверный формат ввода дополнительного ограничения в виде количества целочисленных значений."
                            "\nЕсли было введено 'одним', то правило должно заканчиваться на 'значением'"
                            "\nОшибка в правиле " + QString::number(i + 1) + ": " + strOneRule[i]; //одним должно быть в единственном числе
 
                 if(!strOneRule[i].contains(value_1) && !strOneRule[i].contains("значениями"))
-                    return "Ошибка! Неверный формат ввода правила с допустимым количеством целочисленных значений записи"
+                    return "Ошибка! Неверный формат ввода дополнительного ограничения в виде количества целочисленных значений."
                            "\nЕсли было введено ('двумя' - 'девятью'), то правило должно заканчиваться на 'значениями'"
                            "\nОшибка в правиле " + QString::number(i + 1) + ": " + strOneRule[i]; //Должно быть во множественном числе
 
                 if(strOneRule[i].count(value_1) > 1 || strOneRule[i].count(value_2) > 1 || strOneRule[i].count(value_3) > 1 ||
                         strOneRule[i].count(value_4) > 1 || strOneRule[i].count(value_5) > 1 || strOneRule[i].count(value_6) > 1 ||
                         strOneRule[i].count(value_7) > 1 || strOneRule[i].count(value_8) > 1 || strOneRule[i].count(value_9) > 1)
-                    return "Ошибка! Неверный формат ввода правила с допустимым количеством целочисленных значений записи"
+                    return "Ошибка! Неверный формат ввода дополнительного ограничения в виде количества целочисленных значений."
                            "\nОграничение по количеству целочисленных значений записи должно быть представлено единственным значением"
                            "\nОшибка в правиле " + QString::number(i + 1) + ": " + strOneRule[i]; //не может встречаться больше 1 из предложенных значений
 
                 if(strOneRule[i].count("значением") > 1 || strOneRule[i].count("значениями") > 1)
-                    return "Ошибка! Неверный формат ввода правила с допустимым количеством целочисленных значений записи"
+                    return "Ошибка! Неверный формат ввода дополнительного ограничения в виде количества целочисленных значений."
                            "\nПравило должно содержать одно слово 'значением' или 'значениями'"
                            "\nОшибка в правиле " + QString::number(i + 1) + ": " + strOneRule[i]; //НЕ может быть больше одного
 
                 if((strOneRule[i].count("значением") == 1 && strOneRule[i].count("значениями") != 0)
                         || (strOneRule[i].count("значением") != 0 && strOneRule[i].count("значениями") == 1))
-                    return "Ошибка! Неверный формат ввода правила с допустимым количеством целочисленных значений записи"
+                    return "Ошибка! Неверный формат ввода дополнительного ограничения в виде количества целочисленных значений."
                            "\nПравило должно содержать одно слово 'значением' или 'значениями'"
                            "\nОшибка в правиле " + QString::number(i + 1) + ": " + strOneRule[i]; //НЕ может быть больше одного
 
@@ -390,27 +504,76 @@ QString ClassificationRules::checkClassificationRules(const QString& strRule)
 
                 if(strLastValue[strLastValue.count() - 1] != "значением" && strLastValue[strLastValue.count() - 1] != "значениями"
                         && strLastValue[strLastValue.count() - 1] != "значением." && strLastValue[strLastValue.count() - 1] != "значениями.")
-                    return "Ошибка! Неверный формат ввода правила с допустимым количеством целочисленных значений записи"
+                    return "Ошибка! Неверный формат ввода дополнительного ограничения в виде количества целочисленных значений."
                            "\nПравило должно заканчиваться на слово 'значением' или 'значениями'"
                            "\nОшибка в правиле " + QString::number(i + 1) + ": " + strOneRule[i]; //НЕ заканчивается на значением
 
             }
             else if (regex4.match(strOneRule[i]).hasMatch())
             {
+                if(strOneRule[i].count("[") == 1 && strOneRule[i].count("]") == 1 &&
+                        (strOneRule[i].indexOf("]") - strOneRule[i].indexOf("[")) == 1)
+                    return "Ошибка! Неверный формат ввода дополнительного ограничения в виде конкретных целочисленных значений. "
+                           "(между символами '[' ']' должно быть от 1 до 9 целочисленных значений)."
+                           "\nОшибка в правиле " + QString::number(i + 1) + ": " + strOneRule[i];
+
+                if(strOneRule[i].contains("которое представлено") && !strOneRule[i][strOneRule[i].lastIndexOf(",") + 1].isSpace())
+                        return "Ошибка! Неверный формат ввода дополнительного ограничения в виде количества целочисленных значений."
+                               "\nПосле текстового ограничения должна стоять запятая и пробел \', \'"
+                                "\nОшибка в правиле " + QString::number(i + 1) + ": " + strOneRule[i];
+
+                if(strOneRule[i].contains("в составе которого есть значение") && !strOneRule[i][strOneRule[i].lastIndexOf(",") + 1].isSpace())
+                        return "Ошибка! Неверный формат ввода дополнительного ограничения в виде одного целочисленного значения. "
+                               "\nПосле текстового ограничения должна стоять запятая и пробел \', \'"
+                                "\nОшибка в правиле " + QString::number(i + 1) + ": " + strOneRule[i];
+
+                QString delSpaseStr = strOneRule[i];
+                delSpaseStr.remove(' ');
+
+                if(delSpaseStr.contains("изначениеэтогосвойстваравно"))
+                    return "Ошибка! Неверный формат ввода дополнительного ограничения в виде конкретных целочисленных значений. "
+                           "\nПравильный формат:"
+                           "\nЗапись принадлежит классу \"<название класса>\", если у нее есть свойство \"<текстовое ограничение>\" и значение этого свойства равно \"[<целочисленные значения через ','>]\""
+                            "\nОшибка в правиле " + QString::number(i + 1) + ": " + strOneRule[i];
+
+                else if(delSpaseStr.contains("котороепредставлено"))
+                    return "Ошибка! Неверный формат ввода дополнительного ограничения в виде количества целочисленных значений."
+                           "\nПравильный формат:"
+                           "\nЗапись принадлежит классу \"<название класса>\", если у нее есть свойство \"<текстовое ограничение>\", которое представлено <кол-во значений в виде текста> значением(ями)"
+                           "\nОшибка в правиле " + QString::number(i + 1) + ": " + strOneRule[i];
+
+                else if(delSpaseStr.contains("всоставекоторогоестьзначение"))
+                    return "Ошибка! Неверный формат ввода дополнительного ограничения в виде одного целочисленного значения. "
+                           "\nПравильный формат:"
+                           "\nЗапись принадлежит классу \"<название класса>\", если у нее есть свойство \"<название свойства>\", в составе которого есть значение \"<одно целочисленное значение>\""
+                           "\nОшибка в правиле " + QString::number(i + 1) + ": " + strOneRule[i];
+
                 if(strOneRule[i].count("\"") != 4)
-                    return "Ошибка! Неверный формат ввода правила без дополнительного целочисленного ограничения"
-                           "\nКоличество символов ' \" ' должно быть равно четырём"
-                           "\nОшибка в правиле " + QString::number(i + 1) + ": " + strOneRule[i]; //символов " должно быть 4
+                    return "Ошибка! Неверный формат ввода правила"
+                           "\nОшибка в правиле " + QString::number(i + 1) + ": " + strOneRule[i] +
+                            "\n\nДопустимые форматы: "
+                            "\n1) 'Запись принадлежит классу \"<название класса>\", если у нее есть свойство \"<название свойства>\"'"
+                            "\n2) 'Запись принадлежит классу \"<название класса>\", если у нее есть свойство \"<название свойства>\", которое представлено ([одним|двумя|тремя|четырьмя|пятью|шестью|семью|восемью|девятью]) значением(ями)'"
+                            "\n3) 'Запись принадлежит классу \"<название класса>\", если у нее есть свойство \"<название свойства>\", в составе которого есть значение \"<одно целочисленное значение>\"'"
+                            "\n4) 'Запись принадлежит классу \"<название класса>\", если у нее есть свойство \"<название свойства>\" и значение этого свойства равно \"[целочисленные значения через ',']\"'"; //символов " должно быть 4
 
                 if(strOneRule[i].lastIndexOf("\"") + 1 != strOneRule[i].count() && strOneRule[i].count(".") == 0)
-                    return "Ошибка! Неверный формат ввода правила без дополнительного целочисленного ограничения"
-                           "\nПравило должно заканчиваться на символ ' \" '"
-                           "\nОшибка в правиле " + QString::number(i + 1) + ": " + strOneRule[i]; //Ошибка в написании (Больше чем шаблон)
+                    return "Ошибка! Неверный формат ввода правила"
+                           "\nОшибка в правиле " + QString::number(i + 1) + ": " + strOneRule[i] +
+                            "\n\nДопустимые форматы: "
+                            "\n1) 'Запись принадлежит классу \"<название класса>\", если у нее есть свойство \"<название свойства>\"'"
+                            "\n2) 'Запись принадлежит классу \"<название класса>\", если у нее есть свойство \"<название свойства>\", которое представлено ([одним|двумя|тремя|четырьмя|пятью|шестью|семью|восемью|девятью]) значением(ями)'"
+                            "\n3) 'Запись принадлежит классу \"<название класса>\", если у нее есть свойство \"<название свойства>\", в составе которого есть значение \"<одно целочисленное значение>\"'"
+                            "\n4) 'Запись принадлежит классу \"<название класса>\", если у нее есть свойство \"<название свойства>\" и значение этого свойства равно \"[целочисленные значения через ',']\"'";
 
                 if(strOneRule[i].count(".") == 1 && strOneRule[i][strOneRule[i].lastIndexOf("\"") + 1] != ".")
-                    return "Ошибка! Неверный формат ввода правила без дополнительного целочисленного ограничения"
-                           "\nПравило должно заканчиваться на символ ' \". '"
-                           "\nОшибка в правиле " + QString::number(i + 1) + ": " + strOneRule[i]; //Ошибка в написании (Больше чем шаблон)
+                    return "Ошибка! Неверный формат ввода правила"
+                           "\nОшибка в правиле " + QString::number(i + 1) + ": " + strOneRule[i] +
+                            "\n\nДопустимые форматы: "
+                            "\n1) 'Запись принадлежит классу \"<название класса>\", если у нее есть свойство \"<название свойства>\"'"
+                            "\n2) 'Запись принадлежит классу \"<название класса>\", если у нее есть свойство \"<название свойства>\", которое представлено ([одним|двумя|тремя|четырьмя|пятью|шестью|семью|восемью|девятью]) значением(ями)'"
+                            "\n3) 'Запись принадлежит классу \"<название класса>\", если у нее есть свойство \"<название свойства>\", в составе которого есть значение \"<одно целочисленное значение>\"'"
+                            "\n4) 'Запись принадлежит классу \"<название класса>\", если у нее есть свойство \"<название свойства>\" и значение этого свойства равно \"[целочисленные значения через ',']\"'";
             }
 
 
@@ -472,108 +635,6 @@ QString ClassificationRules::checkClassificationRules(const QString& strRule)
 
     return "Всё хорошо!";
 
-}
-
-QString ClassificationRules::splitStringOfClassificationRules(const QString& rulesData, QList<ClassificationRules>* classificationRules)
-{
-    ClassificationRules checkRules;
-    QString errRule = checkRules.checkClassificationRules(rulesData);
-
-    if(!errRule.contains("Всё хорошо!"))
-        return errRule;
-    else
-    {
-        QStringList substringsRules = rulesData.split(";");
-
-        for(int i = 0; i < substringsRules.count(); i++)
-        {
-            ClassificationRules newRule;
-            //ClassificationRules *newRule = new ClassificationRules;
-
-            QRegExp classRx("\"([^\"]+)\""); // находим слова внутри кавычек \" \"
-            QRegExp propertyRx("свойство \"([^\"]+)\""); // находим слова после слова "свойство \"" и до закрывающей кавычки
-
-            int classPos = classRx.indexIn(substringsRules[i]);
-            if (classPos != -1)
-                newRule.name = classRx.cap(1);
-
-            int propertyPos = propertyRx.indexIn(substringsRules[i]);
-            if (propertyPos != -1)
-                newRule.constraint = propertyRx.cap(1);
-
-
-            QString withLength = "которое представлено";
-            QString singleValue = "в составе которого есть значение";
-            QString severalValues = "и значение этого свойства равно";
-
-            if(substringsRules[i].contains(withLength))
-            {
-                newRule.condition = propertyWithLength;
-
-                if(substringsRules[i].contains("одним"))
-                    newRule.limitValue = Single;
-                else if(substringsRules[i].contains("двумя"))
-                    newRule.limitValue = Two;
-                else if(substringsRules[i].contains("тремя"))
-                    newRule.limitValue = Three;
-                else if(substringsRules[i].contains("четырьмя"))
-                    newRule.limitValue = Four;
-                else if(substringsRules[i].contains("пятью"))
-                    newRule.limitValue = Five;
-                else if(substringsRules[i].contains("шестью"))
-                    newRule.limitValue = Six;
-                else if(substringsRules[i].contains("семью"))
-                    newRule.limitValue = Seven;
-                else if(substringsRules[i].contains("восемью"))
-                    newRule.limitValue = Eight;
-                else if(substringsRules[i].contains("девятью"))
-                    newRule.limitValue = Nine;
-            }
-            else if(substringsRules[i].contains(singleValue))
-            {
-                newRule.condition = propertySingleValue;
-                newRule.limitValue = NotQuantity;
-
-                QRegExp rxValue("(\\d+)");
-                int pos = 0;
-                while ((pos = rxValue.indexIn(substringsRules[i], pos)) != -1) //НЕ НУЖЕН WHILE!!!!!!!!!!!!!!!!!!!!!!!!
-                {
-                    newRule.integerValues.append(rxValue.cap(1).toInt());
-                    pos += rxValue.matchedLength();
-                }
-
-                //newRule->integerValues.append(newRule->getIntegerValues());
-            }
-            else if(substringsRules[i].contains(severalValues))
-            {
-                newRule.condition = propertyWithSeveralValues;
-                newRule.limitValue = NotQuantity;
-
-                int start = substringsRules[i].indexOf('['); // ищем первый символ "["
-                int end = substringsRules[i].indexOf(']'); // ищем первый символ "]"
-
-                QString substring = substringsRules[i].mid(start + 1, end - start - 1); // вырезаем подстроку между скобками
-                QStringList values = substring.split(",", QString::SkipEmptyParts); // разделяем подстроку по запятой
-                for (const QString& value : values)
-                {
-                    bool ok;
-                    int intValue = value.trimmed().toInt(&ok); // преобразуем строку в целое число
-                    if (ok)
-                    {
-                        newRule.integerValues.append(intValue);// выводим полученные значения
-                    }
-                }
-            }
-            else
-            {
-                newRule.condition = propertyWithNoValue;
-                newRule.limitValue = NotQuantity;
-            }
-            classificationRules->append(newRule);
-            //delete newRule;
-        }
-        return errRule;
-    }
 }
 
 ConditionType ClassificationRules::getCondition()

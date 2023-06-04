@@ -14,9 +14,6 @@ public:
     QString getClassName();
     QList<QString> getRecordNames();
 private:
-    QList<Result> result;
-    QList<Records> records;
-    QList<ClassificationRules> rules;
     QString className;
     QList<QString> recordNames;
 };
