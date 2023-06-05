@@ -6,61 +6,65 @@
 
 int main(int argc, char *argv[])
 {
-    //"Шкаф: цвет=[1, 2], размер=[10,12,15];Стол: размер=[12, 15], цвет=[1, 15], покрытие=[12].";
-
-    /*"Запись принадлежит классу \"С покрытием\", если у нее есть свойство \"покрытие\";"
-      "Запись принадлежит классу \"Объёмный\", если у нее есть свойство \"размер\", которое представлено двумя значениями;"
-      "Запись принадлежит классу \"Синий\", если у нее есть свойство \"цвет\", в составе которого есть значение \"1\";"
-      "Запись принадлежит классу \"Матовый\", если у нее есть свойство \"покрытие\" и значение этого свойства равно \"[44, 21]\".";*/
-
     QCoreApplication a(argc, argv);
 
-    QTextStream outStream(stdout);
-    QTextStream inStream(stdin);
-    outStream.setCodec(QTextCodec::codecForName("cp866"));
-
-    FileHandling textFiles;
-    ClassificationRules textRule;
-    Records textRecord;
-    Result textResult;
+    QTextStream outStream(stdout); // переменная для вывода текста в консоль
+    QTextStream inStream(stdin); // переменная для считывания текста из консоли
+    outStream.setCodec(QTextCodec::codecForName("cp866")); // установка кодировки для корректной записи и считывания текста в консоли
+    FileHandling textFiles; // переменная класса FileHandling для записи и считывания текста в/из файла
+    Result textResult; // переменная класса Result для запуска фукнции решающей главную задачу
 
     QString recordFileName = "C:\\Qt\\TestRecord.txt";
     QString ruleFileName = "C:\\Qt\\TestRule.txt";
     QString resultFileName = "C:\\Qt\\result.txt";
 
-    QString resultString;
-    bool emptyFile = false;
+    QString resultString; // выходная строка, которая должна быть записана в выходной файл
+    bool emptyFile = true; // флаг, означающий был ли найден входной файл по заданному пути
+    QString strRecords = textFiles.unpackTextFile(recordFileName); // получаем текст из файла с записями
 
-    QString strRecords = textFiles.unpackTextFile(recordFileName);
+    // Если файл с входными данными записей не был найден
     if(strRecords == "Файл с входными данными не был найден! Возможно, файл не существует")
     {
-        emptyFile = true;
+        emptyFile = false; // установить флагу значение false
+        // записать в выходную строку ошибку при задании пути к входному файлу записей
         resultString = strRecords + "\nВведённый путь: " + recordFileName;
     }
 
-    QString strRule = textFiles.unpackTextFile(ruleFileName);
+    QString strRule = textFiles.unpackTextFile(ruleFileName); // получаем текст из файла с правилами классификации
+
+    // Если файл с входными данными правил классификации не был найден
     if(strRule == "Файл с входными данными не был найден! Возможно, файл не существует")
     {
-        if(emptyFile)
+        // Если входные данные записей так же не были найдены
+        if(!emptyFile)
+            // дополнительно записать в выходную строку ошибку при задании пути к входному файлу правил классификации
             resultString += "\n\n" + strRule + "\nВведённый путь: " + ruleFileName;
+
+        // Иначе
         else
         {
+            // записать в выходную строку ошибку при задании пути к входному файлу правил классификации
             resultString += strRule + "\nВведённый путь: " + ruleFileName;
-            emptyFile = true;
+            emptyFile = false; // установить флагу значение false
         }
     }
 
-    if(!emptyFile)
-    resultString = textResult.classificationRecordsByRule(strRecords, strRule);
+    // Если тексты записей и правил классификации были успешно получены
+    if(emptyFile)
+        // запустить функцию, решающую главную задачу и записать результат в выходную строку
+        resultString = textResult.classificationRecordsByRule(strRecords, strRule);
     outStream << resultString << flush;
-
+    // запустить функцию по записи выходной строки в выходной файл и вернуть флаг, указывающих на удачность записи строки в файл
     bool success = textFiles.writeStringToFile(resultString, resultFileName);
 
+    // Если выходная строка была успешно записана в выходной файл
     if (success)
     {
         QString resultText = "\n\nЗапись в выходной файл произведена корректно";
         outStream << resultText << flush;
     }
+
+    // Иначе
     else
     {
         QString resultText = "\n\nФайл для выходных данных указан неверно! Возможно, указанного расположения не существует";
