@@ -16,9 +16,25 @@ int main(int argc, char *argv[])
 
     QString recordFileName = "C:\\Qt\\TestRecord.txt";
     QString ruleFileName = "C:\\Qt\\TestRule.txt";
-    QString resultFileName = "C:\\Qt\\result.txt";
+    QString resultFileName = "C:\\QtК\\result.txt";
 
-    QString resultString; // выходная строка, которая должна быть записана в выходной файл
+    try
+    {
+        QString strRecords = textFiles.unpackTextFile(recordFileName); // получаем текст из файла с записями
+        QString strRule = textFiles.unpackTextFile(ruleFileName); // получаем текст из файла с правилами классификации
+
+        QString resultString = textResult.classificationRecordsByRule(strRecords, strRule);
+        outStream << resultString << flush;
+
+        textFiles.writeTextToFile(resultString, resultFileName);
+    }
+
+    catch (const QString& errorText)
+    {
+        outStream << errorText << flush;
+    }
+
+    /*QString resultString; // выходная строка, которая должна быть записана в выходной файл
     bool emptyFile = true; // флаг, означающий был ли найден входной файл по заданному пути
     QString strRecords = textFiles.unpackTextFile(recordFileName); // получаем текст из файла с записями
 
@@ -37,8 +53,10 @@ int main(int argc, char *argv[])
     {
         // Если входные данные записей так же не были найдены
         if(!emptyFile)
+        {
             // дополнительно записать в выходную строку ошибку при задании пути к входному файлу правил классификации
             resultString += "\n\n" + strRule + "\nВведённый путь: " + ruleFileName;
+        }
 
         // Иначе
         else
@@ -51,9 +69,12 @@ int main(int argc, char *argv[])
 
     // Если тексты записей и правил классификации были успешно получены
     if(emptyFile)
+    {
         // запустить функцию, решающую главную задачу и записать результат в выходную строку
         resultString = textResult.classificationRecordsByRule(strRecords, strRule);
+    }
     outStream << resultString << flush;
+
     // запустить функцию по записи выходной строки в выходной файл и вернуть флаг, указывающих на удачность записи строки в файл
     bool success = textFiles.writeStringToFile(resultString, resultFileName);
 
@@ -69,7 +90,7 @@ int main(int argc, char *argv[])
     {
         QString resultText = "\n\nФайл для выходных данных указан неверно! Возможно, указанного расположения не существует";
         outStream << resultText + "\nВведённый путь: " + resultFileName << flush;
-    }
+    }*/
 
     return  a.exec();
 }

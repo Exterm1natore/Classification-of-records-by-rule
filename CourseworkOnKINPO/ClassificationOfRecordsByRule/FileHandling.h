@@ -6,7 +6,7 @@
 class FileHandling
 {
 public:
-    bool writeStringToFile(const QString& content, const QString& filePath);
+    void writeTextToFile(const QString& content, const QString& filePath);
     QString unpackTextFile(const QString& filePath);
 };
 

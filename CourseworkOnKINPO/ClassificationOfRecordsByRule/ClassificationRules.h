@@ -28,8 +28,8 @@ class ClassificationRules
 {
 public:
     ClassificationRules();
-    QString checkClassificationRules(const QString& strRule);
-    QString splitStringOfClassificationRules(const QString& rulesData, QList<ClassificationRules>* classificationRules);
+    void checkClassificationRules(const QString& strRule);
+    void splitStringOfClassificationRules(const QString& rulesData, QList<ClassificationRules>* classificationRules);
     ConditionType getCondition();
     LimitationIntegerValues getLimitValue();
     QString getName();

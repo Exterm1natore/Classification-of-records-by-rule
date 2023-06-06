@@ -8,8 +8,8 @@ class Records
 {
 public:
     Records();
-    QString checkRecords (const QString& strRecords);
-    QString splitStringOfRecords(const QString& recordsData, QList<Records>* record);
+    void checkRecords (const QString& strRecords);
+    void splitStringOfRecords(const QString& recordsData, QList<Records>* record);
     QMap<QString, QList<int>> getRelatedIntegerValues();
     QString getName();
 private:

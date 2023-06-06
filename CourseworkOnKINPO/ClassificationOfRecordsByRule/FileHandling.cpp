@@ -1,19 +1,26 @@
 #include "FileHandling.h"
 
-bool FileHandling::writeStringToFile(const QString& content, const QString& filePath)
+void FileHandling::writeTextToFile(const QString& content, const QString& filePath)
 {
     QFile file(filePath); // открываем файл
 
     // Если файл не удалось открыть
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
-        return false; // в случае ошибки открытия файла, возвращаем false
+    {
+        // в случае ошибки открытия файла, вызываем исключение
+        throw QString ("Файл для выходных данных указан неверно! Возможно, указанного расположения не существует\nВведённый путь: " + filePath);
+    }
 
     QTextStream out(&file); // переменная для записи текста в файл
-    out.setCodec("UTF-8"); // установка кодировки UTF-8
-    out << content; // записываем текст в файл
-    file.close(); // закрываем файл
-    // Текст был записан в файл, возвращаем true
-    return true;
+
+    // установка кодировки UTF-8
+    out.setCodec("UTF-8");
+
+    // записываем текст в файл
+    out << content;
+
+    // закрываем файл
+    file.close();
 }
 
 QString FileHandling::unpackTextFile(const QString& filePath)
@@ -22,13 +29,25 @@ QString FileHandling::unpackTextFile(const QString& filePath)
 
     // Если файл не удалось открыть
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
-        return "Файл с входными данными не был найден! Возможно, файл не существует"; // В случае ошибки открытия файла, возвращаем текст ошибки
+    {
+        // в случае ошибки открытия файла, вызываем исключение
+        throw QString ("Файл с входными данными не был найден! Возможно, файл не существует\nВведённый путь: " + filePath);
+    }
 
     QTextStream in(&file); // переменная для считывания текста из файла
-    in.setCodec("UTF-8"); // установка кодировки UTF-8
-    QString content = in.readAll(); // считываем весь текст из файла
-    content.remove('\n'); // во всём полученном тексте удаляем символ новой строки
-    file.close(); // закрываем файл
-    // Вернуть полученный текст из файла
+
+    // установка кодировки UTF-8
+    in.setCodec("UTF-8");
+
+    // считываем весь текст из файла
+    QString content = in.readAll();
+
+    // во всём полученном тексте удаляем символ новой строки
+    content.remove('\n');
+
+    // закрываем файл
+    file.close();
+
+    // возвращаем полученный текст
     return content;
 }
