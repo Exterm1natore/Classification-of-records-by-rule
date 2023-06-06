@@ -118,7 +118,7 @@ QString Records::checkRecords (const QString& strRecords)
     if(strOneRecord.count() > 100)
         return "Ошибка! Количество записей не может быть больше 100. Допустимый диапазон: [1;100].";
 
-    // Для каждой записи
+    // Для каждой записи (записи разделены символом ';')
     for(int i = 0; i < strOneRecord.count(); i++)
     {
         // Если количество символов ':' не равно одному
@@ -373,12 +373,15 @@ QString Records::checkRecords (const QString& strRecords)
 
             // Для каждого элемента массива values
             for(const QString& value : values)
+            {
+                QString valInt = value.trimmed(); // удаляем начальные пробелы из подстроки
 
                 // Если длина числа (почимвольно) больше 2 или в ней присутствует 0
-                if(value.count() > 2 || value[0] == '0')
+                if(valInt.count() > 2 || valInt[0] == '0')
                     return "Ошибка! Целочисленные значения должны лежать в диапазоне [1;99] (0 перед числом писать нельзя). "
-                           "\nВы ввели: " + value +
+                           "\nВы ввели: " + valInt +
                             "\nОшибка в записи " + QString::number(i + 1) + ": " + strOneRecord[i];
+            }
 
             // Если количество целочисленных значений внутри '[' ']' больше 9
             if(numberValues > 9)
