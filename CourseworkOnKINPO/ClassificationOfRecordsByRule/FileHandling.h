@@ -2,6 +2,7 @@
 #define FILEHANDLING_H
 #include <QFile>
 #include <QTextStream>
+#include <QRegularExpression>
 
 /*!
 *\file
