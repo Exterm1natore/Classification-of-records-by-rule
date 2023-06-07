@@ -1,3 +1,8 @@
+/*!
+*\file
+*\brief Данный  файл содержит в себе реализацию основных функций класса ClassificationRules, которые используются в программе.
+*/
+
 #include "ClassificationRules.h"
 
 ClassificationRules::ClassificationRules()

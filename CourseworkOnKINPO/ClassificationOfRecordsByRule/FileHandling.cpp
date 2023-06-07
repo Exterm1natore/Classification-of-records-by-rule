@@ -1,3 +1,8 @@
+/*!
+*\file
+*\brief Данный  файл содержит в себе реализацию основных функций класса FileHandling, которые используются в программе.
+*/
+
 #include "FileHandling.h"
 
 void FileHandling::writeTextToFile(const QString& content, const QString& filePath)
