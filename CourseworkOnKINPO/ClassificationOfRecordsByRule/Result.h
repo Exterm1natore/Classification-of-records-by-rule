@@ -10,9 +10,31 @@
 *\brief Данный  файл содержит в себе класс Result и заголовки функций, которые используются в программе.
 */
 
+/*!
+ * \brief Класс, представляющий результат классификации.
+ *
+ * Данный класс описывает результат классификации с использованием основных характеристик,
+ * таких как название класса и названия записей, ему соответствующие.
+ *
+ * Пример использования:
+ * \code
+ * Result result.
+ * QString resultText = result.classificationRecordsByRule ("Мяч:цвет=[1].", "Запись принадлежит классу "Красный", если у нее есть свойство "цвет".");
+ * QList<Result> results;
+ * QString txt = result.buildStringFromResult(results);
+ *
+ * QString className = result.getClassName();
+ * QList<QString> recordNames = getRecordNames();
+ *  \endcode
+ */
 class Result
 {
 public:
+
+    /*!
+     * \brief Конструктор класса Result.
+     * Создает объект Result с пустыми значениями характеристик.
+     */
     Result();
 
     /*!
@@ -28,7 +50,7 @@ public:
     * \param[in] result - контейнер класса Result который хранит в себе данные классифицированных записей
     * \return выходная строка классифицированных записей
     */
-    QString buildStringFromResult (const QList<Result>& result);
+    QString buildStringFromResult(const QList<Result>& result);
 
     /*!
     * \brief Получить текущее название класса
@@ -41,9 +63,10 @@ public:
     * \return вернуть текущие названия записей
     */
     QList<QString> getRecordNames();
+
 private:
-    QString className;
-    QList<QString> recordNames;
+    QString className;          ///< Название класса
+    QList<QString> recordNames; ///< Названия записей соответствующие данному классу
 };
 
 #endif // RESULT_H

@@ -9,6 +9,19 @@
 *\brief Данный  файл содержит в себе класс FileHandling и заголовки функций, которые используются в программе.
 */
 
+/*!
+ * \brief Класс, представляющий основные задачи работы с файлами.
+ *
+ * Данный класс описывает методы работы с файла по чтению и записи, а так же проверки открытия файла и
+ * входных данных файла на запрещённые символы.
+ *
+ * Пример использования:
+ * \code
+ * FileHandling textFile;
+ * textFile.writeTextToFile("Hello World!", "C:\\Qt\\resultText.txt")
+ * QString text = textFile.unpackTextFile("C:\\Qt\\record.txt");
+ *  \endcode
+ */
 class FileHandling
 {
 public:

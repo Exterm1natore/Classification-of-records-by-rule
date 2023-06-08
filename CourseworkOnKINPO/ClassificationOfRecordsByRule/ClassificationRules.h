@@ -25,16 +25,16 @@
 */
 enum LimitationIntegerValues
 {
-    NotQuantity,
-    Single,
-    Two,
-    Three,
-    Four,
-    Five,
-    Six,
-    Seven,
-    Eight,
-    Nine
+    NotQuantity = 0,
+    Single = 1,
+    Two = 2,
+    Three = 3,
+    Four = 4,
+    Five = 5,
+    Six = 6,
+    Seven = 7,
+    Eight = 8,
+    Nine = 9
 };
 
 /*!
@@ -45,16 +45,42 @@ enum LimitationIntegerValues
 * \param propertyWithSeveralValues - правило с массивом целочисленных значений
 */
 enum ConditionType {
-    propertyWithNoValue,
-    propertyWithLength,
-    propertySingleValue,
-    propertyWithSeveralValues
+    propertyWithNoValue = 0,
+    propertyWithLength = 1,
+    propertySingleValue = 2,
+    propertyWithSeveralValues = 3
 };
 
-
+/*!
+ * \brief Класс, представляющий правило классификации.
+ *
+ * Данный класс описывает правило классфикации с использованием основных характеристик,
+ * таких как название класса, тектовое ограничение, дополнительное ограничение,
+ * количество целочисленных значений дополнительного ограничения, представленного в виде текста,
+ * тип правила.
+ *
+ * Пример использования:
+ * \code
+ * ClassificationRules rule;
+ * rule.checkClassificationRules("Запись принадлежит классу "С покрытием", если у нее есть свойство "покрытие".");
+ * QList<ClassificationRules> classificationRules;
+ * rule.splitStringOfClassificationRules("Запись принадлежит классу "С покрытием", если у нее есть свойство "покрытие".", &classificationRules);
+ *
+ * ConditionType condition = rule.getgetCondition();
+ * LimitationIntegerValues limitValues = rule.getLimitValue();
+ * QString name = rule.getName();
+ * QString constraint = rule.getConstraint();
+ * QList<int> intValues = rule.getIntegerValues();
+ *  \endcode
+ */
 class ClassificationRules
 {
 public:
+
+    /*!
+     * \brief Конструктор класса ClassificationRules.
+     * Создает объект ClassificationRules с пустыми значениями характеристик.
+     */
     ClassificationRules();
 
     /*!
@@ -102,11 +128,11 @@ public:
     QList<int> getIntegerValues();
 
 private:
-    ConditionType condition;
-    LimitationIntegerValues limitValue;
-    QString name;
-    QString constraint;
-    QList<int> integerValues;
+    ConditionType condition;            ///< Тип правила классификации.
+    LimitationIntegerValues limitValue; ///< Количество целочисленных значений в дополнительном ограничении представленном в виде текста.
+    QString name;                       ///< Название класса.
+    QString constraint;                 ///< Текстовое ограничение.
+    QList<int> integerValues;           ///< Массив целочисленных значений.
 };
 
 #endif // CLASSIFICATIONRULES_H

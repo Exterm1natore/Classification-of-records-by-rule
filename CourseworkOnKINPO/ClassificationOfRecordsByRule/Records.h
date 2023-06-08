@@ -9,9 +9,31 @@
 *\brief Данный  файл содержит в себе класс Records и заголовки функций, которые используются в программе.
 */
 
+/*!
+ * \brief Класс, представляющий запись.
+ *
+ * Данный класс описывает запись с использованием основных характеристик,
+ * таких как название записи, свойства записи и соответствующие им целочисленные значения.
+ *
+ * Пример использования:
+ * \code
+ * Records record;
+ * record.checkRecords("Cтол:размер=[1,2],цвет=[99,1,3],покрытие=[12].");
+ * QList<Records> record;
+ * record.splitStringOfRecords("Cтол:размер=[1,2],цвет=[99,1,3],покрытие=[12].", &record);
+ *
+ * QMap<QString, QList<int>> property = record.getRelatedIntegerValues();
+ * QString name = record.getName();
+ *  \endcode
+ */
 class Records
 {
 public:
+
+    /*!
+     * \brief Конструктор класса Records.
+     * Создает объект Records с пустыми значениями характеристик.
+     */
     Records();
 
     /*!
@@ -41,8 +63,8 @@ public:
     QString getName();
 
 private:
-    QMap <QString, QList<int>> relatedIntegerValues;
-    QString name;
+    QMap <QString, QList<int>> relatedIntegerValues; ///< Свойства записи и соответствующие ей целочисленные значения.
+    QString name;                                    ///< Название записи.
 };
 
 #endif // RECORDS_H

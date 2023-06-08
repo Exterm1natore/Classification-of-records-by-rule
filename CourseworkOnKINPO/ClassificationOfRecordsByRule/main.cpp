@@ -35,9 +35,18 @@ int main(int argc, char *argv[])
     FileHandling textFiles; // переменная класса FileHandling для записи и считывания текста в/из файла
     Result textResult; // переменная класса Result для запуска фукнции решающей главную задачу
 
-    QString recordFileName = "C:\\Qt\\TestRecord.txt";
-    QString ruleFileName = "C:\\Qt\\TestRule.txt";
+    QString recordFileName = "C:\\Qt\\record_2.txt";
+    QString ruleFileName = "C:\\Qt\\rule_2.txt";
     QString resultFileName = "C:\\Qt\\result.txt";
+
+    /*// считываем с консоли путь к файлу с записями
+    QString recordFileName = inStream.readLine();
+
+    // считываем с консоли путь к файлу к правилами классификации
+    QString ruleFileName = inStream.readLine();
+
+    // считываем с консоли путь к выходному файлу результата
+    QString resultFileName = inStream.readLine();*/
 
     // Делать
     try
