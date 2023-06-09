@@ -38,7 +38,7 @@ QString Result::classificationRecordsByRule(const QString& textRecords, const QS
         {
             Records record = records[j]; // выбираем одну запись по индексу j
 
-            // Если в записи есть свойство которое соответсвует текстовому ограничению правила классификации
+            // Если в записи есть свойство, которое соответствует текстовому ограничению правила классификации
             if(record.getRelatedIntegerValues().contains(rule.getConstraint()))
             {
                 /* флаг который при сравнении целочисленных значений возвращает true если какое-либо число не совпало с дополнительным

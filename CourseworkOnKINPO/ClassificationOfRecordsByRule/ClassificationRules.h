@@ -44,7 +44,8 @@ enum LimitationIntegerValues
 * \param propertySingleValue - правило единстенным целочисленным значением в виде числа
 * \param propertyWithSeveralValues - правило с массивом целочисленных значений
 */
-enum ConditionType {
+enum ConditionType
+{
     propertyWithNoValue = 0,
     propertyWithLength = 1,
     propertySingleValue = 2,
@@ -58,6 +59,12 @@ enum ConditionType {
  * таких как название класса, тектовое ограничение, дополнительное ограничение,
  * количество целочисленных значений дополнительного ограничения, представленного в виде текста,
  * тип правила.
+ *
+ * \param condition - тип правила классификации
+ * \param limitValue - количество целочисленных значений в дополнительном ограничении представленном в виде текста
+ * \param name - название класса
+ * \param constraint - текстовое ограничение
+ * \param integerValues - массив целочисленных значений
  *
  * Пример использования:
  * \code

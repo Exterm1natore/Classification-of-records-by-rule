@@ -106,7 +106,7 @@ void Records::checkRecords (const QString& strRecords)
     {
         int position = checkStart + 1; // переменная следующего индекса в тексте после '['
 
-        // Пока не внутри '[' ']'
+        // Пока внутри '[' ']'
         while(strRecords[position] != "]")
         {
 

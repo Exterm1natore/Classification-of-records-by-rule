@@ -23,34 +23,48 @@ ClassificationRecordsByRule.exe C:\\Documents\records.txt C:\\Documents\rules.tx
 #include "Result.h"
 #include "FileHandling.h"
 
-int main(int argc, char *argv[])
+int main(const int argc, char *argv[])
 {
-    QCoreApplication a(argc, argv);
-
     // установка кодировки для корректной записи и считывания текста в консоли
     setlocale(LC_ALL, "Russian");
     QTextStream outStream(stdout); // переменная для вывода текста в консоль
-    QTextStream inStream(stdin); // переменная для считывания текста из консоли
 
     FileHandling textFiles; // переменная класса FileHandling для записи и считывания текста в/из файла
     Result textResult; // переменная класса Result для запуска фукнции решающей главную задачу
 
-    QString recordFileName = "C:\\Qt\\record_2.txt";
-    QString ruleFileName = "C:\\Qt\\rule_2.txt";
+    QString recordFileName = "C:\\Qt\\TestRecord.txt";
+    QString ruleFileName = "C:\\Qt\\TestRule.txt";
     QString resultFileName = "C:\\Qt\\result.txt";
 
-    /*// считываем с консоли путь к файлу с записями
-    QString recordFileName = inStream.readLine();
-
-    // считываем с консоли путь к файлу к правилами классификации
-    QString ruleFileName = inStream.readLine();
-
-    // считываем с консоли путь к выходному файлу результата
-    QString resultFileName = inStream.readLine();*/
 
     // Делать
     try
     {
+        /*if (argv[1] == NULL || argv[2] == NULL || argv[3] == NULL)
+        {
+            throw QString("Недостаточно параметров для запуска программы.");
+        }
+        if (argc != 4)
+        {
+            throw QString("Недостаточно параметров для запуска программы.");
+        }
+
+        // считываем с консоли путь к файлу с записями
+        QString recordFileName = argv[1];
+
+        // считываем с консоли путь к файлу к правилами классификации
+        QString ruleFileName = argv[2];
+
+        // считываем с консоли путь к выходному файлу результата
+        QString resultFileName = argv[3];*/
+
+        // Eсли расширение файлов не .txt
+        if(!recordFileName.endsWith(".txt") || !ruleFileName.endsWith(".txt") || !resultFileName.endsWith(".txt"))
+        {
+            // выбросить исключение в консоль
+            throw QString("Формат входного файла не поддерживается! Правильный формат: .txt");
+        }
+
         // получаем текст из файл с записями
         QString strRecords = textFiles.unpackTextFile(recordFileName);
 
@@ -72,5 +86,5 @@ int main(int argc, char *argv[])
         outStream << errorText << flush;
     }
 
-    return  a.exec();
+    return  0;
 }
