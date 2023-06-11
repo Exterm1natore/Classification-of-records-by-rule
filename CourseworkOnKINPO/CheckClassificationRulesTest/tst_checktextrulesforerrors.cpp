@@ -60,7 +60,7 @@ void checkTextRulesForErrors::rulesFileIsEmpty()
 {
     QString textRule = "   ";
     QString expectedText = "Текст правил классификации:\n"
-                           "Ошибка! Файл с входными данными правил классификации является пустым.";;
+                           "Ошибка! Файл с входными данными правил классификации является пустым.";
     ClassificationRules rules;
 
     try
@@ -70,7 +70,7 @@ void checkTextRulesForErrors::rulesFileIsEmpty()
     }
     catch (const QString& errorText)
     {
-       QCOMPARE(expectedText, errorText);
+        QCOMPARE(expectedText, errorText);
     }
 }
 
@@ -95,7 +95,7 @@ void checkTextRulesForErrors::repeatingClassNames()
     }
     catch (const QString& errorText)
     {
-       QCOMPARE(expectedText, errorText);
+        QCOMPARE(expectedText, errorText);
     }
 }
 
@@ -120,7 +120,7 @@ void checkTextRulesForErrors::repeatingClassificationConditions()
     }
     catch (const QString& errorText)
     {
-       QCOMPARE(expectedText, errorText);
+        QCOMPARE(expectedText, errorText);
     }
 }
 
@@ -143,7 +143,7 @@ void checkTextRulesForErrors::noDotAtEndOfRulesText()
     }
     catch (const QString& errorText)
     {
-       QCOMPARE(expectedText, errorText);
+        QCOMPARE(expectedText, errorText);
     }
 }
 
@@ -167,7 +167,7 @@ void checkTextRulesForErrors::thereAreTwoDotsinTextOfRules()
     }
     catch (const QString& errorText)
     {
-       QCOMPARE(expectedText, errorText);
+        QCOMPARE(expectedText, errorText);
     }
 }
 
@@ -287,7 +287,7 @@ void checkTextRulesForErrors::overHundredClassificationRules()
     }
     catch (const QString& errorText)
     {
-       QCOMPARE(expectedText, errorText);
+        QCOMPARE(expectedText, errorText);
     }
 }
 
@@ -308,7 +308,7 @@ void checkTextRulesForErrors::wrongFormatForRuleInput_1()
     }
     catch (const QString& errorText)
     {
-       QCOMPARE(expectedText, errorText);
+        QCOMPARE(expectedText, errorText);
     }
 }
 
@@ -333,7 +333,7 @@ void checkTextRulesForErrors::wrongFormatForRuleInput_2()
     }
     catch (const QString& errorText)
     {
-       QCOMPARE(expectedText, errorText);
+        QCOMPARE(expectedText, errorText);
     }
 }
 
@@ -356,7 +356,7 @@ void checkTextRulesForErrors::wrongFormatForEnteringRuleWithNumberOfIntegerValue
     }
     catch (const QString& errorText)
     {
-       QCOMPARE(expectedText, errorText);
+        QCOMPARE(expectedText, errorText);
     }
 }
 
@@ -379,7 +379,7 @@ void checkTextRulesForErrors::wrongFormatForEnteringRuleWithNumberOfIntegerValue
     }
     catch (const QString& errorText)
     {
-       QCOMPARE(expectedText, errorText);
+        QCOMPARE(expectedText, errorText);
     }
 }
 
@@ -401,7 +401,7 @@ void checkTextRulesForErrors::wrongFormatForEnteringRuleWithNumberOfIntegerValue
     }
     catch (const QString& errorText)
     {
-       QCOMPARE(expectedText, errorText);
+        QCOMPARE(expectedText, errorText);
     }
 }
 
@@ -423,7 +423,7 @@ void checkTextRulesForErrors::wrongFormatForEnteringRuleWithNumberOfIntegerValue
     }
     catch (const QString& errorText)
     {
-       QCOMPARE(expectedText, errorText);
+        QCOMPARE(expectedText, errorText);
     }
 }
 
@@ -446,7 +446,7 @@ void checkTextRulesForErrors::wrongFormatForEnteringRuleWithNumberOfIntegerValue
     }
     catch (const QString& errorText)
     {
-       QCOMPARE(expectedText, errorText);
+        QCOMPARE(expectedText, errorText);
     }
 }
 
@@ -469,7 +469,7 @@ void checkTextRulesForErrors::wrongFormatForEnteringRuleWithAnArrayOfIntegerValu
     }
     catch (const QString& errorText)
     {
-       QCOMPARE(expectedText, errorText);
+        QCOMPARE(expectedText, errorText);
     }
 }
 
@@ -492,7 +492,7 @@ void checkTextRulesForErrors::wrongFormatForEnteringRuleWithAnArrayOfIntegerValu
     }
     catch (const QString& errorText)
     {
-       QCOMPARE(expectedText, errorText);
+        QCOMPARE(expectedText, errorText);
     }
 }
 
@@ -513,7 +513,7 @@ void checkTextRulesForErrors::wrongFormatForEnteringRuleWithAnArrayOfIntegerValu
     }
     catch (const QString& errorText)
     {
-       QCOMPARE(expectedText, errorText);
+        QCOMPARE(expectedText, errorText);
     }
 }
 
@@ -536,7 +536,7 @@ void checkTextRulesForErrors::wrongFormatForEnteringRuleWithAnArrayOfIntegerValu
     }
     catch (const QString& errorText)
     {
-       QCOMPARE(expectedText, errorText);
+        QCOMPARE(expectedText, errorText);
     }
 }
 
@@ -558,7 +558,7 @@ void checkTextRulesForErrors::wrongFormatForEnteringRuleWithAnArrayOfIntegerValu
     }
     catch (const QString& errorText)
     {
-       QCOMPARE(expectedText, errorText);
+        QCOMPARE(expectedText, errorText);
     }
 }
 
@@ -581,7 +581,7 @@ void checkTextRulesForErrors::wrongFormatForEnteringRuleWithAnArrayOfIntegerValu
     }
     catch (const QString& errorText)
     {
-       QCOMPARE(expectedText, errorText);
+        QCOMPARE(expectedText, errorText);
     }
 }
 
@@ -604,7 +604,7 @@ void checkTextRulesForErrors::wrongFormatForEnteringRuleWithAnArrayOfIntegerValu
     }
     catch (const QString& errorText)
     {
-       QCOMPARE(expectedText, errorText);
+        QCOMPARE(expectedText, errorText);
     }
 }
 
@@ -627,7 +627,7 @@ void checkTextRulesForErrors::incorrectFormatForEnteringRuleWithSingleIntegerVal
     }
     catch (const QString& errorText)
     {
-       QCOMPARE(expectedText, errorText);
+        QCOMPARE(expectedText, errorText);
     }
 }
 
@@ -650,7 +650,7 @@ void checkTextRulesForErrors::incorrectFormatForEnteringRuleWithSingleIntegerVal
     }
     catch (const QString& errorText)
     {
-       QCOMPARE(expectedText, errorText);
+        QCOMPARE(expectedText, errorText);
     }
 }
 
@@ -673,7 +673,7 @@ void checkTextRulesForErrors::incorrectFormatForEnteringRuleWithSingleIntegerVal
     }
     catch (const QString& errorText)
     {
-       QCOMPARE(expectedText, errorText);
+        QCOMPARE(expectedText, errorText);
     }
 }
 
@@ -695,7 +695,7 @@ void checkTextRulesForErrors::incorrectlyEnteredClassName_1()
     }
     catch (const QString& errorText)
     {
-       QCOMPARE(expectedText, errorText);
+        QCOMPARE(expectedText, errorText);
     }
 }
 
@@ -717,7 +717,7 @@ void checkTextRulesForErrors::incorrectlyEnteredClassName_2()
     }
     catch (const QString& errorText)
     {
-       QCOMPARE(expectedText, errorText);
+        QCOMPARE(expectedText, errorText);
     }
 }
 
@@ -738,7 +738,7 @@ void checkTextRulesForErrors::incorrectlyEnteredClassName_3()
     }
     catch (const QString& errorText)
     {
-       QCOMPARE(expectedText, errorText);
+        QCOMPARE(expectedText, errorText);
     }
 }
 
@@ -760,7 +760,7 @@ void checkTextRulesForErrors::incorrectlyEnteredClassName_4()
     }
     catch (const QString& errorText)
     {
-       QCOMPARE(expectedText, errorText);
+        QCOMPARE(expectedText, errorText);
     }
 }
 
@@ -782,7 +782,7 @@ void checkTextRulesForErrors::incorrectlyEnteredClassName_5()
     }
     catch (const QString& errorText)
     {
-       QCOMPARE(expectedText, errorText);
+        QCOMPARE(expectedText, errorText);
     }
 }
 
@@ -804,7 +804,7 @@ void checkTextRulesForErrors::textRestrictionIncorrectlyEntered_1()
     }
     catch (const QString& errorText)
     {
-       QCOMPARE(expectedText, errorText);
+        QCOMPARE(expectedText, errorText);
     }
 }
 
@@ -826,7 +826,7 @@ void checkTextRulesForErrors::textRestrictionIncorrectlyEntered_2()
     }
     catch (const QString& errorText)
     {
-       QCOMPARE(expectedText, errorText);
+        QCOMPARE(expectedText, errorText);
     }
 }
 
@@ -848,7 +848,7 @@ void checkTextRulesForErrors::textRestrictionIncorrectlyEntered_3()
     }
     catch (const QString& errorText)
     {
-       QCOMPARE(expectedText, errorText);
+        QCOMPARE(expectedText, errorText);
     }
 }
 
@@ -870,7 +870,7 @@ void checkTextRulesForErrors::textRestrictionIncorrectlyEntered_4()
     }
     catch (const QString& errorText)
     {
-       QCOMPARE(expectedText, errorText);
+        QCOMPARE(expectedText, errorText);
     }
 }
 
@@ -887,7 +887,7 @@ void checkTextRulesForErrors::theNoFaultRule()
     }
     catch (const QString& errorText)
     {
-       QFAIL("Fail!");
+        QFAIL("Fail!");
     }
 }
 

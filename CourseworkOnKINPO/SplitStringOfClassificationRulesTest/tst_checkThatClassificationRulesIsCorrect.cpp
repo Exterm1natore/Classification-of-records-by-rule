@@ -88,10 +88,7 @@ void checkClassificationRules::oneRuleWithNoAdditionalRestriction()
     {
         rules.splitStringOfClassificationRules(textRule, &arrRules);
 
-        if(arrRules.count() != arrTestRules.count())
-        {
-            QFAIL("Fail");
-        }
+        QCOMPARE(arrTestRules.count(), arrRules.count());
 
         for(int i = 0; i < arrRules.count(); i++)
         {
@@ -100,17 +97,11 @@ void checkClassificationRules::oneRuleWithNoAdditionalRestriction()
             QCOMPARE(arrTestRules[i].expectedConstraint, arrRules[i].getConstraint());
             QCOMPARE(arrTestRules[i].expectedlimitValue, arrRules[i].getLimitValue());
 
-            if(arrTestRules[i].expectedIntegerValues.count() != arrRules[i].getIntegerValues().count())
-            {
-                QFAIL("Fail");
-            }
-            else
-            {
-                for(int j = 0; j < arrRules[i].getIntegerValues().count(); j++)
-                {
-                    QCOMPARE(arrTestRules[i].expectedIntegerValues[j], arrRules[i].getIntegerValues()[j]);
-                }
+            QCOMPARE(arrTestRules[i].expectedIntegerValues.count(), arrRules[i].getIntegerValues().count());
 
+            for(int j = 0; j < arrRules[i].getIntegerValues().count(); j++)
+            {
+                QCOMPARE(arrTestRules[i].expectedIntegerValues[j], arrRules[i].getIntegerValues()[j]);
             }
         }
     }
@@ -141,10 +132,7 @@ void checkClassificationRules::oneRuleAsNumberOfIntegerValues()
     {
         rules.splitStringOfClassificationRules(textRule, &arrRules);
 
-        if(arrRules.count() != arrTestRules.count())
-        {
-            QFAIL("Fail");
-        }
+        QCOMPARE(arrTestRules.count(), arrRules.count());
 
         for(int i = 0; i < arrRules.count(); i++)
         {
@@ -153,17 +141,11 @@ void checkClassificationRules::oneRuleAsNumberOfIntegerValues()
             QCOMPARE(arrTestRules[i].expectedConstraint, arrRules[i].getConstraint());
             QCOMPARE(arrTestRules[i].expectedlimitValue, arrRules[i].getLimitValue());
 
-            if(arrTestRules[i].expectedIntegerValues.count() != arrRules[i].getIntegerValues().count())
-            {
-                QFAIL("Fail");
-            }
-            else
-            {
-                for(int j = 0; j < arrRules[i].getIntegerValues().count(); j++)
-                {
-                    QCOMPARE(arrTestRules[i].expectedIntegerValues[j], arrRules[i].getIntegerValues()[j]);
-                }
+            QCOMPARE(arrTestRules[i].expectedIntegerValues.count(), arrRules[i].getIntegerValues().count());
 
+            for(int j = 0; j < arrRules[i].getIntegerValues().count(); j++)
+            {
+                QCOMPARE(arrTestRules[i].expectedIntegerValues[j], arrRules[i].getIntegerValues()[j]);
             }
         }
     }
@@ -189,14 +171,12 @@ void checkClassificationRules::oneRuleAsSingleIntegerValue()
     QList<TestClassificationRules> arrTestRules;
 
     arrTestRules.append(testRules);
+
     try
     {
         rules.splitStringOfClassificationRules(textRule, &arrRules);
 
-        if(arrRules.count() != arrTestRules.count())
-        {
-            QFAIL("Fail");
-        }
+        QCOMPARE(arrTestRules.count(), arrRules.count());
 
         for(int i = 0; i < arrRules.count(); i++)
         {
@@ -205,17 +185,11 @@ void checkClassificationRules::oneRuleAsSingleIntegerValue()
             QCOMPARE(arrTestRules[i].expectedConstraint, arrRules[i].getConstraint());
             QCOMPARE(arrTestRules[i].expectedlimitValue, arrRules[i].getLimitValue());
 
-            if(arrTestRules[i].expectedIntegerValues.count() != arrRules[i].getIntegerValues().count())
-            {
-                QFAIL("Fail");
-            }
-            else
-            {
-                for(int j = 0; j < arrRules[i].getIntegerValues().count(); j++)
-                {
-                    QCOMPARE(arrTestRules[i].expectedIntegerValues[j], arrRules[i].getIntegerValues()[j]);
-                }
+            QCOMPARE(arrTestRules[i].expectedIntegerValues.count(), arrRules[i].getIntegerValues().count());
 
+            for(int j = 0; j < arrRules[i].getIntegerValues().count(); j++)
+            {
+                QCOMPARE(arrTestRules[i].expectedIntegerValues[j], arrRules[i].getIntegerValues()[j]);
             }
         }
     }
@@ -247,10 +221,7 @@ void checkClassificationRules::oneRuleAsAnArrayOfIntegerValues()
     {
         rules.splitStringOfClassificationRules(textRule, &arrRules);
 
-        if(arrRules.count() != arrTestRules.count())
-        {
-            QFAIL("Fail");
-        }
+        QCOMPARE(arrTestRules.count(), arrRules.count());
 
         for(int i = 0; i < arrRules.count(); i++)
         {
@@ -259,17 +230,11 @@ void checkClassificationRules::oneRuleAsAnArrayOfIntegerValues()
             QCOMPARE(arrTestRules[i].expectedConstraint, arrRules[i].getConstraint());
             QCOMPARE(arrTestRules[i].expectedlimitValue, arrRules[i].getLimitValue());
 
-            if(arrTestRules[i].expectedIntegerValues.count() != arrRules[i].getIntegerValues().count())
-            {
-                QFAIL("Fail");
-            }
-            else
-            {
-                for(int j = 0; j < arrRules[i].getIntegerValues().count(); j++)
-                {
-                    QCOMPARE(arrTestRules[i].expectedIntegerValues[j], arrRules[i].getIntegerValues()[j]);
-                }
+            QCOMPARE(arrTestRules[i].expectedIntegerValues.count(), arrRules[i].getIntegerValues().count());
 
+            for(int j = 0; j < arrRules[i].getIntegerValues().count(); j++)
+            {
+                QCOMPARE(arrTestRules[i].expectedIntegerValues[j], arrRules[i].getIntegerValues()[j]);
             }
         }
     }
@@ -337,10 +302,7 @@ void checkClassificationRules::fourDifferentTypesOfRules()
     {
         rules.splitStringOfClassificationRules(textRule, &arrRules);
 
-        if(arrRules.count() != arrTestRules.count())
-        {
-            QFAIL("Fail");
-        }
+        QCOMPARE(arrTestRules.count(), arrRules.count());
 
         for(int i = 0; i < arrRules.count(); i++)
         {
@@ -349,17 +311,11 @@ void checkClassificationRules::fourDifferentTypesOfRules()
             QCOMPARE(arrTestRules[i].expectedConstraint, arrRules[i].getConstraint());
             QCOMPARE(arrTestRules[i].expectedlimitValue, arrRules[i].getLimitValue());
 
-            if(arrTestRules[i].expectedIntegerValues.count() != arrRules[i].getIntegerValues().count())
-            {
-                QFAIL("Fail");
-            }
-            else
-            {
-                for(int j = 0; j < arrRules[i].getIntegerValues().count(); j++)
-                {
-                    QCOMPARE(arrTestRules[i].expectedIntegerValues[j], arrRules[i].getIntegerValues()[j]);
-                }
+            QCOMPARE(arrTestRules[i].expectedIntegerValues.count(), arrRules[i].getIntegerValues().count());
 
+            for(int j = 0; j < arrRules[i].getIntegerValues().count(); j++)
+            {
+                QCOMPARE(arrTestRules[i].expectedIntegerValues[j], arrRules[i].getIntegerValues()[j]);
             }
         }
     }
@@ -473,10 +429,7 @@ void checkClassificationRules::eightRulesInPairsOfSameType()
     {
         rules.splitStringOfClassificationRules(textRule, &arrRules);
 
-        if(arrRules.count() != arrTestRules.count())
-        {
-            QFAIL("Fail");
-        }
+        QCOMPARE(arrTestRules.count(), arrRules.count());
 
         for(int i = 0; i < arrRules.count(); i++)
         {
@@ -485,17 +438,11 @@ void checkClassificationRules::eightRulesInPairsOfSameType()
             QCOMPARE(arrTestRules[i].expectedConstraint, arrRules[i].getConstraint());
             QCOMPARE(arrTestRules[i].expectedlimitValue, arrRules[i].getLimitValue());
 
-            if(arrTestRules[i].expectedIntegerValues.count() != arrRules[i].getIntegerValues().count())
-            {
-                QFAIL("Fail");
-            }
-            else
-            {
-                for(int j = 0; j < arrRules[i].getIntegerValues().count(); j++)
-                {
-                    QCOMPARE(arrTestRules[i].expectedIntegerValues[j], arrRules[i].getIntegerValues()[j]);
-                }
+            QCOMPARE(arrTestRules[i].expectedIntegerValues.count(), arrRules[i].getIntegerValues().count());
 
+            for(int j = 0; j < arrRules[i].getIntegerValues().count(); j++)
+            {
+                QCOMPARE(arrTestRules[i].expectedIntegerValues[j], arrRules[i].getIntegerValues()[j]);
             }
         }
     }
@@ -1667,10 +1614,7 @@ void checkClassificationRules::oneHundredRules()
     {
         rules.splitStringOfClassificationRules(textRule, &arrRules);
 
-        if(arrRules.count() != arrTestRules.count())
-        {
-            QFAIL("Fail");
-        }
+        QCOMPARE(arrTestRules.count(), arrRules.count());
 
         for(int i = 0; i < arrRules.count(); i++)
         {
@@ -1679,17 +1623,11 @@ void checkClassificationRules::oneHundredRules()
             QCOMPARE(arrTestRules[i].expectedConstraint, arrRules[i].getConstraint());
             QCOMPARE(arrTestRules[i].expectedlimitValue, arrRules[i].getLimitValue());
 
-            if(arrTestRules[i].expectedIntegerValues.count() != arrRules[i].getIntegerValues().count())
-            {
-                QFAIL("Fail");
-            }
-            else
-            {
-                for(int j = 0; j < arrRules[i].getIntegerValues().count(); j++)
-                {
-                    QCOMPARE(arrTestRules[i].expectedIntegerValues[j], arrRules[i].getIntegerValues()[j]);
-                }
+            QCOMPARE(arrTestRules[i].expectedIntegerValues.count(), arrRules[i].getIntegerValues().count());
 
+            for(int j = 0; j < arrRules[i].getIntegerValues().count(); j++)
+            {
+                QCOMPARE(arrTestRules[i].expectedIntegerValues[j], arrRules[i].getIntegerValues()[j]);
             }
         }
     }

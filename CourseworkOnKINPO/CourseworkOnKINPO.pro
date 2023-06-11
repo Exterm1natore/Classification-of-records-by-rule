@@ -1,4 +1,12 @@
 TEMPLATE = subdirs
 
 SUBDIRS += \
-    ClassificationOfRecordsByRule
+    BuildStringFromResultTest \
+    CheckClassificationRulesTest \
+    CheckRecordsTest \
+    ClassificationOfRecordsByRule \
+    ClassificationRecordByRuleTests \
+    SplitStringOfClassificationRulesTest \
+    SplitStringOfRecordsTest \
+    UnpackTextFileTest \
+    WriteTextToFileTest

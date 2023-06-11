@@ -32,21 +32,21 @@ int main(const int argc, char *argv[])
     FileHandling textFiles; // переменная класса FileHandling для записи и считывания текста в/из файла
     Result textResult; // переменная класса Result для запуска фукнции решающей главную задачу
 
-    QString recordFileName = "C:\\Qt\\TestRecord.txt";
-    QString ruleFileName = "C:\\Qt\\TestRule.txt";
-    QString resultFileName = "C:\\Qt\\result.txt";
-
-
     // Делать
     try
     {
-        /*if (argv[1] == NULL || argv[2] == NULL || argv[3] == NULL)
+        // Если в командной строке аргументы 2 или 3 или 4 пусты
+        if (argv[1] == NULL || argv[2] == NULL || argv[3] == NULL)
         {
+            // выбросить исключение о том, что недостаточно параметров для запуска программы
             throw QString("Недостаточно параметров для запуска программы.");
         }
+
+        // Если параметров запуска программы не 4
         if (argc != 4)
         {
-            throw QString("Недостаточно параметров для запуска программы.");
+            // выбросить исключение о том, что неверные параметры для запуска программы
+            throw QString("Неверные параметры для запуска программы (необходимо 4 параметра).");
         }
 
         // считываем с консоли путь к файлу с записями
@@ -56,13 +56,13 @@ int main(const int argc, char *argv[])
         QString ruleFileName = argv[2];
 
         // считываем с консоли путь к выходному файлу результата
-        QString resultFileName = argv[3];*/
+        QString resultFileName = argv[3];
 
         // Eсли расширение файлов не .txt
         if(!recordFileName.endsWith(".txt") || !ruleFileName.endsWith(".txt") || !resultFileName.endsWith(".txt"))
         {
             // выбросить исключение в консоль
-            throw QString("Формат входного файла не поддерживается! Правильный формат: .txt");
+            throw QString("Формат входного файла не поддерживается! Правильный формат: '.txt'");
         }
 
         // получаем текст из файл с записями
@@ -73,7 +73,6 @@ int main(const int argc, char *argv[])
 
         // запускаем фукнцию, решающую главную задачу по классификации записей по правилам и получаем выходную строку для записи в выходной файл
         QString resultString = textResult.classificationRecordsByRule(strRecords, strRule);
-        outStream << resultString << flush;
 
         // записываем выходную строку в выходной файл
         textFiles.writeTextToFile(resultString, resultFileName);

@@ -154,8 +154,12 @@ QString Result::buildStringFromResult (const QList<Result>& result)
                 resultString.append(newResult.getRecordNames()[j]);
             }
         }
-        // разделяем классы новой строкой
-        resultString.append("\n");
+        // Если запись не последняя
+        if(i != result.count() - 1)
+        {
+            // ставим символ новой стоки
+            resultString.append("\n");
+        }
     }
     // возвращаем результат (все названия классов и соответствующие им названия записей в виде текста)
     return resultString;
