@@ -1,0 +1,9 @@
+Название программы: ClassificationOfRecordsByRule.exe
+
+Файл записей: ..\..\..\ManualTesting\TextRecords.txt
+
+Файл правил классификации: ..\..\..\ManualTesting\TextRules.txt
+
+Выходной файл классифицированных записей: ..\..\..\ManualTesting\Result.txt
+
+Пример запуска: ClassificationOfRecordsByRule.exe ..\..\..\ManualTesting\TextRecords.txt ..\..\..\ManualTesting\TextRules.txt ..\..\..\ManualTesting\Result.txt
