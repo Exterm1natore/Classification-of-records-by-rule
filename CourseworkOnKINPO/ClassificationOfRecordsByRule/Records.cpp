@@ -229,50 +229,79 @@ void Records::checkRecords (const QString& strRecords)
         }
 
         int lastIndex = strOneRecord[i].lastIndexOf(']'); // индекс последнего символа ']'
+        int currentIndex = strOneRecord[i].indexOf(']'); // индекс первого символа ']'
 
-        // Для каждого символа строки до последнего символа ']'
-        for (int j = 0; j < lastIndex; j++)
+        // Пока не последний символ ']'
+        while(currentIndex != lastIndex)
         {
             // Если после символа ']' не стоит запятая
-            if(strOneRecord[i][j] == "]" && strOneRecord[i][j + 1] != ',')
-            {
-                throw QString ("Текст записей:\nОшибка! После каждого символа ']', кроме последнего, должна стоять запятая ','."
-                               "\nОшибка в записи " + QString::number(i + 1) + ": " + strOneRecord[i]);
-            }
+          if(strOneRecord[i][currentIndex + 1] != ',')
+          {
+              throw QString ("Текст записей:\nОшибка! После каждого символа ']', кроме последнего, должна стоять запятая ','."
+                             "\nОшибка в записи " + QString::number(i + 1) + ": " + strOneRecord[i]);
+          }
+          // получить следующий идкес символа ']'
+          currentIndex = strOneRecord[i].indexOf(']', currentIndex + 1);
         }
 
-        // Для каждого символа записи кроме последнего
-        for(int j = 0; j < strOneRecord[i].count() - 1; j++)
+        // Если запись начинается с символа '='
+        if(strOneRecord[i][0] == "=")
+        {
+            throw QString ("Текст записей:\nОшибка! Строка должна начинаться с названия записи и не может начинаться с '='."
+                           "\nОшибка в записи " + QString::number(i + 1) + ": " + strOneRecord[i]);
+        }
+
+        // Если запись начинается с символа '['
+        if(strOneRecord[i][0] == '[')
+        {
+            throw QString ("Текст записей:\nОшибка! Строка должна начинаться с названия записи и не может начинаться с '['."
+                           "\nОшибка в записи " + QString::number(i + 1) + ": " + strOneRecord[i]);
+        }
+
+        currentIndex = strOneRecord[i].indexOf("="); // индекс текущего символа '='
+
+        // Если последний символ строки - символ равно '='
+        if(strOneRecord[i].lastIndexOf("=") == (strOneRecord[i].count() - 1))
+        {
+            throw QString ("Текст записей:\nОшибка! После символа равно ('=') должен идти символ '['."
+                           "\nОшибка в записи " + QString::number(i + 1) + ": " + strOneRecord[i]);
+        }
+
+        // Пока есть символы '='
+        while(currentIndex != -1)
         {
             // Если после символа '=' не стоит '['
-            if(strOneRecord[i][j] == "=" && strOneRecord[i][j + 1] != "[")
+            if(strOneRecord[i][currentIndex + 1] != "[")
             {
                 throw QString ("Текст записей:\nОшибка! После символа '=' должен стоять символ '['."
                                "\nОшибка в записи " + QString::number(i + 1) + ": " + strOneRecord[i]);
             }
 
-            // Если перед символом '[' не стоит '='
-            else if(strOneRecord[i][j] == "[" && strOneRecord[i][j - 1] != "=" && j > 0)
-            {
-                throw QString ("Текст записей:\nОшибка! Перед символом '[' должен стоять символ '='."
-                               "\nОшибка в записи " + QString::number(i + 1) + ": " + strOneRecord[i]);
-            }
-
-            // Если название записи начинается с символа '='
-            if(strOneRecord[i][0] == "=")
-            {
-                throw QString ("Текст записей:\nОшибка! Строка должна начинаться с названия записи и не может начинаться с '='."
-                               "\nОшибка в записи " + QString::number(i + 1) + ": " + strOneRecord[i]);
-            }
-
             // Иначе если перед символом '=' стоит не буква
-            else if(strOneRecord[i][j] == "=" && !strOneRecord[i][j-1].isLetter())
+            else if(!strOneRecord[i][currentIndex - 1].isLetter())
             {
                 throw QString ("Текст записей:\nОшибка! Перед символом '=' должно идти название свойства записи."
                                "\nНазвание состоит только из букв русского или английского алфавита "
                                "(другие символы межу названием записи и символом '=' недопускаются)."
                                "\nОшибка в записи " + QString::number(i + 1) + ": " + strOneRecord[i]);
             }
+            // получить следующий индекс символа '='
+            currentIndex = strOneRecord[i].indexOf("=", currentIndex + 1);
+        }
+
+        currentIndex = strOneRecord[i].indexOf("["); // текущий индекс символа '['
+
+        // Пока есть символы '['
+        while(currentIndex != -1)
+        {
+            // Если перед символом '[' не стоит '='
+            if(strOneRecord[i][currentIndex - 1] != "=")
+            {
+                throw QString ("Текст записей:\nОшибка! Перед символом '[' должен стоять символ '='."
+                               "\nОшибка в записи " + QString::number(i + 1) + ": " + strOneRecord[i]);
+            }
+            // получить следующий индекс символа '='
+            currentIndex = strOneRecord[i].indexOf("[", currentIndex + 1);
         }
 
         //----------------------------Блок проверки названий свойств записи---------------------------------------------------------------
@@ -323,7 +352,7 @@ void Records::checkRecords (const QString& strRecords)
         //--------------------------------------------------------------------------------------------------------------------------------
         //--------------------------------Блок проверки совпадений свойств одной записи---------------------------------------------------
         // Для каждого названия свойства записи
-        for (int j = 0; j < listProperties.size(); ++j)
+        for (int j = 0; j < listProperties.size(); j++)
         {
             const QString& currentString = listProperties.at(j); // получаем название свойства записи по индексу j
 
@@ -562,12 +591,12 @@ void Records::checkRecords (const QString& strRecords)
 
     //--------------------------------- Блок проверки названий записей на совпадение----------------------------------------------
     // Для каждого названия записи
-    for (int i = 0; i < strOneRecord.count(); ++i)
+    for (int i = 0; i < strOneRecord.count(); i++)
     {
         const QString& currentString = strOneRecord[i].mid(0, strOneRecord[i].indexOf(":")); // получить текст названия записи по индексу i
 
         // Для каждого названия записи идущего после текущего
-        for (int j = i + 1; j < strOneRecord.count(); ++j)
+        for (int j = i + 1; j < strOneRecord.count(); j++)
         {
             const QString& otherString = strOneRecord[j].mid(0, strOneRecord[j].indexOf(":")); // получить текст названия записи по индексу j
 

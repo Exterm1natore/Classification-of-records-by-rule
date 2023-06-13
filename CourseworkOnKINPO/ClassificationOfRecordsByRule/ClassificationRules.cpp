@@ -968,12 +968,12 @@ void ClassificationRules::checkClassificationRules(const QString& strRule)
 
     //-------------------------------Блок проверки на совпадения названий классов--------------------------------------------------
     // Для каджого названия класса
-    for (int i = 0; i < numberRuleName.count(); ++i)
+    for (int i = 0; i < numberRuleName.count(); i++)
     {
         const QString& currentString = numberRuleName[i]; // создаём неизменяемую строку в которую присваиваем текущее название класса (i)
 
         // Для каждого названия класса, идущего после текущего
-        for (int j = i + 1; j < numberRuleName.count(); ++j)
+        for (int j = i + 1; j < numberRuleName.count(); j++)
         {
             const QString& otherString = numberRuleName[j]; // создаём неизменяемую строку в которую присваиваем текущее название класса (j)
 
@@ -991,7 +991,7 @@ void ClassificationRules::checkClassificationRules(const QString& strRule)
 
     //---------------------------------Блок проверки на совпадения ограничений правил классификации--------------------------------
     // Для каждого правила
-    for(int i = 0; i < strOneRule.count(); ++i)
+    for(int i = 0; i < strOneRule.count(); i++)
     {
         // создаём строку и присваиваем ему подстроку следующую после названия класса (i)
         QString currentString = strOneRule[i].mid(strOneRule[i].indexOf("\"", 29) + 1);
@@ -1005,7 +1005,7 @@ void ClassificationRules::checkClassificationRules(const QString& strRule)
         }
 
         // Для каждого правила следующего после текущего
-        for(int j = i + 1; j < strOneRule.count(); ++j)
+        for(int j = i + 1; j < strOneRule.count(); j++)
         {
             // создаём строку и присваиваем ему подстроку следующую после названия класса (j)
             QString otherString = strOneRule[j].mid(strOneRule[j].indexOf("\"", 29) + 1);
