@@ -11,7 +11,7 @@
  Classification rules have a name (class) and a condition(s) under which a record falls into that class. 
  The rules are entered in a strictly defined format.
  
- Example entry: Шкаф: цвет=[1,55,2], размер=[2, 11, 99, 64], форма=[15].
+ Example record: Шкаф: цвет=[1,55,2], размер=[2, 11, 99, 64], форма=[15].
  Example properties:
  1) Запись принадлежит классу "С покрытием", если у нее есть свойство "покрытие";
  2) Запись принадлежит классу "П л о с к и й", если у нее есть свойство "размер", которое представлено двумя значениями;
