@@ -39,10 +39,14 @@ private slots:
     void incorrectlyEnteredClassName_3();
     void incorrectlyEnteredClassName_4();
     void incorrectlyEnteredClassName_5();
+    void incorrectlyEnteredClassName_6();
+    void incorrectlyEnteredClassName_7();
     void textRestrictionIncorrectlyEntered_1();
     void textRestrictionIncorrectlyEntered_2();
     void textRestrictionIncorrectlyEntered_3();
     void textRestrictionIncorrectlyEntered_4();
+    void textRestrictionIncorrectlyEntered_5();
+    void textRestrictionIncorrectlyEntered_6();
     void theNoFaultRule();
 };
 
@@ -524,7 +528,7 @@ void checkTextRulesForErrors::wrongFormatForEnteringRuleWithAnArrayOfIntegerValu
     QString expectedText = "Текст правил классификации:\n"
                            "Ошибка! Неверный формат ввода дополнительного ограничения в виде конкретных целочисленных значений. \n"
                            "Между символами '[' и ']' числа должны лежать в диапазоне [1;99].\n"
-                           "Вы ввели: 100\n"
+                           "Вы ввели: \"100\"\n"
                            "Ошибка в правиле 1: Запись принадлежит классу \"C покрытием\", если у нее есть свойство \"покрытие\" и значение этого свойства равно \"[100]\".";
 
     ClassificationRules rules;
@@ -592,7 +596,7 @@ void checkTextRulesForErrors::wrongFormatForEnteringRuleWithAnArrayOfIntegerValu
     QString expectedText = "Текст правил классификации:\n"
                            "Ошибка! Неверный формат ввода дополнительного ограничения в виде одного целочисленного значения. \n"
                            "Целочисленные значения должны лежать в диапазоне [1;99] (0 перед числом писать нельзя).\n"
-                           "Вы ввели: 999999999999999999\n"
+                           "Вы ввели: \"999999999999999999\"\n"
                            "Ошибка в правиле 1: Запись принадлежит классу \"C покрытием\", если у нее есть свойство \"покрытие\" и значение этого свойства равно \"[1,999999999999999999]\".";
 
     ClassificationRules rules;
@@ -615,7 +619,7 @@ void checkTextRulesForErrors::incorrectFormatForEnteringRuleWithSingleIntegerVal
     QString expectedText = "Текст правил классификации:\n"
                            "Ошибка! Неверный формат ввода дополнительного ограничения в виде одного целочисленного значения. \n"
                            "Целочисленное значение должно лежать в диапазоне [1;99].\n"
-                           "Вы ввели: 0\n"
+                           "Вы ввели: \"0\"\n"
                            "Ошибка в правиле 1: Запись принадлежит классу \"C покрытием\", если у нее есть свойство \"покрытие\", в составе которого есть значение \"0\".";
 
     ClassificationRules rules;
@@ -683,7 +687,7 @@ void checkTextRulesForErrors::incorrectlyEnteredClassName_1()
 
     QString expectedText = "Текст правил классификации:\n"
                            "Ошибка! Внутри двойных кавычек ('\"') в названии класса и текстовом ограничении текст не может начинаться и заканчиваться не буквой.\n"
-                           "Вы ввели:  покрытием\n"
+                           "Вы ввели: \" покрытием\"\n"
                            "Ошибка в правиле 1: Запись принадлежит классу \" покрытием\", если у нее есть свойство \"покрытие\".";
 
     ClassificationRules rules;
@@ -748,7 +752,7 @@ void checkTextRulesForErrors::incorrectlyEnteredClassName_4()
 
     QString expectedText = "Текст правил классификации:\n"
                            "Ошибка! В названии класса допускается использование только букв русского или английского алфавита и пробелов (не больше одного подряд).\n"
-                           "Вы ввели: C, покрытием\n"
+                           "Вы ввели: \"C, покрытием\"\n"
                            "Ошибка в правиле 1: Запись принадлежит классу \"C, покрытием\", если у нее есть свойство \"покрытие\".";
 
     ClassificationRules rules;
@@ -770,8 +774,50 @@ void checkTextRulesForErrors::incorrectlyEnteredClassName_5()
 
     QString expectedText = "Текст правил классификации:\n"
                            "Ошибка! В названии класса все буквы, кроме первой, должны быть в нижнем регистре.\n"
-                           "Вы ввели: C покHытием\n"
+                           "Вы ввели: \"C покHытием\"\n"
                            "Ошибка в правиле 1: Запись принадлежит классу \"C покHытием\", если у нее есть свойство \"покрытие\".";
+
+    ClassificationRules rules;
+
+    try
+    {
+        rules.checkClassificationRules(textRule);
+        QFAIL("Fail!");
+    }
+    catch (const QString& errorText)
+    {
+        QCOMPARE(expectedText, errorText);
+    }
+}
+
+void checkTextRulesForErrors::incorrectlyEnteredClassName_6()
+{
+    QString textRule = "Запись принадлежит классу \"Ёж\", если у нее есть свойство \"покрытие\".";
+
+    QString expectedText = "Текст правил классификации:\nОшибка! Название класса не может быть меньше трёх или больше двадцати символов."
+                           "\nВы ввели: \"Ёж\""
+                           "\nОшибка в правиле 1: Запись принадлежит классу \"Ёж\", если у нее есть свойство \"покрытие\".";
+
+    ClassificationRules rules;
+
+    try
+    {
+        rules.checkClassificationRules(textRule);
+        QFAIL("Fail!");
+    }
+    catch (const QString& errorText)
+    {
+        QCOMPARE(expectedText, errorText);
+    }
+}
+
+void checkTextRulesForErrors::incorrectlyEnteredClassName_7()
+{
+    QString textRule = "Запись принадлежит классу \"Больше двадцати символов\", если у нее есть свойство \"покрытие\".";
+
+    QString expectedText = "Текст правил классификации:\nОшибка! Название класса не может быть меньше трёх или больше двадцати символов."
+                           "\nВы ввели: \"Больше двадцати символов\""
+                           "\nОшибка в правиле 1: Запись принадлежит классу \"Больше двадцати символов\", если у нее есть свойство \"покрытие\".";
 
     ClassificationRules rules;
 
@@ -792,7 +838,7 @@ void checkTextRulesForErrors::textRestrictionIncorrectlyEntered_1()
 
     QString expectedText = "Текст правил классификации:\n"
                            "Ошибка! Внутри двойных кавычек ('\"') в названии класса и текстовом ограничении текст не может начинаться и заканчиваться не буквой.\n"
-                           "Вы ввели:  \n"
+                           "Вы ввели: \" \"\n"
                            "Ошибка в правиле 1: Запись принадлежит классу \"C покытием\", если у нее есть свойство \" \".";
 
     ClassificationRules rules;
@@ -814,7 +860,7 @@ void checkTextRulesForErrors::textRestrictionIncorrectlyEntered_2()
 
     QString expectedText = "Текст правил классификации:\n"
                            "Ошибка! Внутри двойных кавычек ('\"') в названии класса и текстовом ограничении текст не может начинаться и заканчиваться не буквой.\n"
-                           "Вы ввели:  покрытие \n"
+                           "Вы ввели: \" покрытие \"\n"
                            "Ошибка в правиле 1: Запись принадлежит классу \"C покытием\", если у нее есть свойство \" покрытие \".";
 
     ClassificationRules rules;
@@ -836,7 +882,7 @@ void checkTextRulesForErrors::textRestrictionIncorrectlyEntered_3()
 
     QString expectedText = "Текст правил классификации:\n"
                            "Ошибка! Текстовое ограничение может содержать только буквы в нижнем регистре.\n"
-                           "Вы ввели: Покрытие\n"
+                           "Вы ввели: \"Покрытие\"\n"
                            "Ошибка в правиле 1: Запись принадлежит классу \"C покытием\", если у нее есть свойство \"Покрытие\".";
 
     ClassificationRules rules;
@@ -858,8 +904,52 @@ void checkTextRulesForErrors::textRestrictionIncorrectlyEntered_4()
 
     QString expectedText = "Текст правил классификации:\n"
                            "Ошибка! Текстовое ограничение может содержать только буквы русского или английского алфавита и не должно содержать пробелы.\n"
-                           "Вы ввели: пок,рытие\n"
+                           "Вы ввели: \"пок,рытие\"\n"
                            "Ошибка в правиле 1: Запись принадлежит классу \"C покытием\", если у нее есть свойство \"пок,рытие\".";
+
+    ClassificationRules rules;
+
+    try
+    {
+        rules.checkClassificationRules(textRule);
+        QFAIL("Fail!");
+    }
+    catch (const QString& errorText)
+    {
+        QCOMPARE(expectedText, errorText);
+    }
+}
+
+void checkTextRulesForErrors::textRestrictionIncorrectlyEntered_5()
+{
+    QString textRule = "Запись принадлежит классу \"C покытием\", если у нее есть свойство \"ёж\".";
+
+    QString expectedText = "Текст правил классификации:\n"
+                           "Ошибка! Текстовое ограничение правила не может быть меньше трёх или больше двадцати символов.\n"
+                           "Вы ввели: \"ёж\"\n"
+                           "Ошибка в правиле 1: Запись принадлежит классу \"C покытием\", если у нее есть свойство \"ёж\".";
+
+    ClassificationRules rules;
+
+    try
+    {
+        rules.checkClassificationRules(textRule);
+        QFAIL("Fail!");
+    }
+    catch (const QString& errorText)
+    {
+        QCOMPARE(expectedText, errorText);
+    }
+}
+
+void checkTextRulesForErrors::textRestrictionIncorrectlyEntered_6()
+{
+    QString textRule = "Запись принадлежит классу \"C покытием\", если у нее есть свойство \"большедвадцатисимволов\".";
+
+    QString expectedText = "Текст правил классификации:\n"
+                           "Ошибка! Текстовое ограничение правила не может быть меньше трёх или больше двадцати символов.\n"
+                           "Вы ввели: \"большедвадцатисимволов\"\n"
+                           "Ошибка в правиле 1: Запись принадлежит классу \"C покытием\", если у нее есть свойство \"большедвадцатисимволов\".";
 
     ClassificationRules rules;
 

@@ -488,8 +488,8 @@ void Records::checkRecords (const QString& strRecords)
                 if(valInt.count() > 2 || valInt[0] == '0')
                 {
                     throw QString ("Текст записей:\nОшибка! Целочисленные значения должны лежать в диапазоне [1;99] (0 перед числом писать нельзя). "
-                                   "\nВы ввели: " + valInt +
-                                   "\nОшибка в записи " + QString::number(i + 1) + ": " + strOneRecord[i]);
+                                   "\nВы ввели: \"" + valInt +
+                                   "\"\nОшибка в записи " + QString::number(i + 1) + ": " + strOneRecord[i]);
                 }
             }
 
