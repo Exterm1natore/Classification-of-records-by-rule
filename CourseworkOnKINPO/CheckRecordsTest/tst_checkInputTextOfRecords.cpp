@@ -22,6 +22,10 @@ private slots:
     void nameOfRecordIsThirdLetterInUppercase();
     void illegalCharactersInTitleOfRecord();
     void thereIsSpaceInEntryName();
+    void titleOfRecordIsTooSmall();
+    void titleOfRecordIsTooBig();
+    void recordPropertyNameIsTooSmall();
+    void recordPropertyNameIsTooBig();
     void betweenRecordNameAndPropertyForbiddenCharacters();
     void thereTwoSpacesBetweenRecordNameAndProperty();
     void prohibitedCharactersInPropertyName();
@@ -281,6 +285,88 @@ void checkInputTextOfRecords::thereIsSpaceInEntryName()
                            "Ошибка! В названии записи допускаются лишь буквы русского или английского алфавита.\n"
                            "Вы ввели: \"Шк аф\"\n"
                            "Ошибка в записи 1: Шк аф: цвет=[1,2], размер=[10,12,15].";
+    Records record;
+
+    try
+    {
+        record.checkRecords(textRecord);
+        QFAIL("Fail!");
+    }
+    catch (const QString& errorText)
+    {
+        QCOMPARE(expectedText, errorText);
+    }
+}
+
+void checkInputTextOfRecords::titleOfRecordIsTooSmall()
+{
+    QString textRecord = "Ёж:цвет=[1,2], размер=[10,12,15].";
+
+    QString expectedText = "Текст записей:\n"
+                           "Ошибка! Название записи не может быть меньше трёх или больше двадцати символов.\n"
+                           "Ошибка в записи 1: Ёж:цвет=[1,2], размер=[10,12,15].";
+    Records record;
+
+    try
+    {
+        record.checkRecords(textRecord);
+        QFAIL("Fail!");
+    }
+    catch (const QString& errorText)
+    {
+        QCOMPARE(expectedText, errorText);
+    }
+}
+
+void checkInputTextOfRecords::titleOfRecordIsTooBig()
+{
+    QString textRecord = "Слишкоммногосимволови:цвет=[1,2], размер=[10,12,15].";
+
+    QString expectedText = "Текст записей:\n"
+                           "Ошибка! Название записи не может быть меньше трёх или больше двадцати символов.\n"
+                           "Ошибка в записи 1: Слишкоммногосимволови:цвет=[1,2], размер=[10,12,15].";
+    Records record;
+
+    try
+    {
+        record.checkRecords(textRecord);
+        QFAIL("Fail!");
+    }
+    catch (const QString& errorText)
+    {
+        QCOMPARE(expectedText, errorText);
+    }
+}
+
+void checkInputTextOfRecords::recordPropertyNameIsTooSmall()
+{
+    QString textRecord = "Шкаф:цв=[1,2], размер=[10,12,15].";
+
+    QString expectedText = "Текст записей:\n"
+                           "Ошибка! Название свойства записи не может быть меньше трёх или больше двадцати символов.\n"
+                           "Вы ввели: \"цв\"\n"
+                           "Ошибка в записи 1: Шкаф:цв=[1,2], размер=[10,12,15].";
+    Records record;
+
+    try
+    {
+        record.checkRecords(textRecord);
+        QFAIL("Fail!");
+    }
+    catch (const QString& errorText)
+    {
+        QCOMPARE(expectedText, errorText);
+    }
+}
+
+void checkInputTextOfRecords::recordPropertyNameIsTooBig()
+{
+    QString textRecord = "Шкаф:слишкоммногосимволови=[1,2], размер=[10,12,15].";
+
+    QString expectedText = "Текст записей:\n"
+                           "Ошибка! Название свойства записи не может быть меньше трёх или больше двадцати символов.\n"
+                           "Вы ввели: \"слишкоммногосимволови\"\n"
+                           "Ошибка в записи 1: Шкаф:слишкоммногосимволови=[1,2], размер=[10,12,15].";
     Records record;
 
     try
