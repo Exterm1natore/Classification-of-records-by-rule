@@ -1,5 +1,0 @@
-Файл записей: .\Files\TextRecords.txt
-
-Файл правил классификации: .\Files\TextRules.txt
-
-Выходной файл классифицированных записей: .\Files\Result.txt
